@@ -15,13 +15,24 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::updateOrCreate([
-            'email' => 'admin@church.test',
-        ], [
-            'name' => 'System Admin',
-            'password' => bcrypt('password'),
-        ]);
 
-        $this->call(ElectionDemoSeeder::class);
+
+        if (app()->environment('production')) {
+            User::updateOrCreate([
+                'email' => 'uchaguzi@kkkttemboni.or.tz',
+            ], [
+                'name' => 'System Admin',
+                'password' => bcrypt('4UCHAGUZI2know!'),
+            ]);
+        } else {
+            User::updateOrCreate([
+                'email' => 'uchaguzi@kkkttemboni.or.tz',
+            ], [
+                'name' => 'System Admin',
+                'password' => bcrypt('4UCHAGUZI2know!'),
+            ]);
+
+            $this->call(ElectionDemoSeeder::class);
+        }
     }
 }
