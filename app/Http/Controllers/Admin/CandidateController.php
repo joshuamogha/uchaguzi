@@ -82,7 +82,9 @@ class CandidateController extends Controller
 
         $contest->candidates()->create($data);
 
-        return redirect()->route('admin.elections.candidates.index', $election)->with('success', 'Candidate added successfully.');
+        return redirect()
+            ->route('admin.elections.candidates.create', [$election, $contest])
+            ->with('success', 'Candidate added successfully.');
     }
 
     public function edit(Election $election, ElectionContest $contest, \App\Models\Candidate $candidate): View
