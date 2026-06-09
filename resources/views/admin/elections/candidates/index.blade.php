@@ -6,7 +6,10 @@
             <h1 class="h2 mb-1">Candidates</h1>
             <p class="page-subtle mb-0">{{ $election->title }}</p>
         </div>
-        <a class="btn btn-outline-secondary mt-3 mt-lg-0" href="{{ route('admin.elections.contests.index', $election) }}">Back to Contests</a>
+        <div class="d-flex flex-column flex-sm-row gap-2 mt-3 mt-lg-0">
+            <a class="btn btn-outline-dark" href="{{ route('admin.elections.candidates.export-sheet', $election) }}" target="_blank">Export Candidate Sheet</a>
+            <a class="btn btn-outline-secondary" href="{{ route('admin.elections.contests.index', $election) }}">Back to Contests</a>
+        </div>
     </div>
 
     @foreach ($contests as $contest)

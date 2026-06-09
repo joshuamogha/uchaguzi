@@ -45,6 +45,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->scopeBindings()->gro
     Route::delete('/elections/{election}/contests/{contest}', [ElectionContestController::class, 'destroy'])->name('elections.contests.destroy');
 
     Route::get('/elections/{election}/candidates', [CandidateController::class, 'index'])->name('elections.candidates.index');
+    Route::get('/elections/{election}/candidates/export-sheet', [CandidateController::class, 'exportSheet'])->name('elections.candidates.export-sheet');
     Route::get('/elections/{election}/contests/{contest}/candidates/create', [CandidateController::class, 'create'])->name('elections.candidates.create');
     Route::post('/elections/{election}/contests/{contest}/candidates', [CandidateController::class, 'store'])->name('elections.candidates.store');
     Route::get('/elections/{election}/contests/{contest}/candidates/{candidate}/edit', [CandidateController::class, 'edit'])->name('elections.candidates.edit');

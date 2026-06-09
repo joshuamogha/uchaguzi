@@ -23,6 +23,36 @@ class CandidateController extends Controller
         ]);
     }
 
+    public function exportSheet(Election $election): View
+    {
+        $this->authorize('view', $election);
+
+        $contests = $election->contests()
+            ->with([
+                'community',
+                'candidates' => fn ($query) => $query->where('is_active', true)->with('member'),
+            ])
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn (ElectionContest $contest) => $contest->candidates->isNotEmpty())
+            ->values()
+            ->map(function (ElectionContest $contest) {
+                $contest->display_name = $contest->community?->name ?: $contest->name;
+
+                return $contest;
+            });
+
+        $instructionLine = $contests->every(fn (ElectionContest $contest) => $contest->required_selections === 1)
+            ? 'Weka tiki (✓) moja kwa kila jumuiya / nafasi'
+            : 'Weka tiki (✓) kulingana na idadi inayotakiwa kwa kila jumuiya / nafasi';
+
+        return view('admin.elections.candidates.export-sheet', [
+            'election' => $election->load('churchGroup'),
+            'contests' => $contests,
+            'instructionLine' => $instructionLine,
+        ]);
+    }
+
     public function create(Election $election, ElectionContest $contest): View
     {
         $this->authorize('update', $election);
