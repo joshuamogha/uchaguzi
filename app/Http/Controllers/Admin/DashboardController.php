@@ -6,12 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Election;
 use App\Models\Member;
 use App\Models\Voter;
+use App\Services\ManualResultService;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly ManualResultService $manualResultService,
+    ) {
+    }
+
     public function __invoke(): View
     {
+        $isAdmin = auth()->user()?->isAdmin() ?? false;
         $totalVoters = Voter::count();
         $votesCast = Voter::where('has_voted', true)->count();
         $statusCounts = Election::query()
@@ -20,8 +27,14 @@ class DashboardController extends Controller
             ->pluck('aggregate', 'status');
 
         $turnoutPercentage = $totalVoters > 0 ? round(($votesCast / $totalVoters) * 100, 2) : 0;
+        $recentElections = Election::latest()->take(5)->get()->map(function (Election $election) {
+            $election->entered_ballots = $this->manualResultService->enteredBallots($election);
+
+            return $election;
+        });
 
         return view('admin.dashboard', [
+            'isAdmin' => $isAdmin,
             'stats' => [
                 'total_elections' => Election::count(),
                 'active_elections' => Election::where('status', 'active')->count(),
@@ -30,7 +43,7 @@ class DashboardController extends Controller
                 'votes_cast' => $votesCast,
                 'turnout_percentage' => $turnoutPercentage,
             ],
-            'recentElections' => Election::latest()->take(5)->get(),
+            'recentElections' => $recentElections,
             'dashboardCharts' => [
                 'turnout' => [
                     'labels' => ['Votes Cast', 'Pending Voters'],

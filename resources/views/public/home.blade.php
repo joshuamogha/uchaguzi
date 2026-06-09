@@ -71,7 +71,7 @@
                             @if ($election->status->value === 'active')
                                 <a href="{{ route('vote.verify.form') }}" class="btn btn-primary">Proceed to Vote</a>
                             @endif
-                            @if ($election->canShowPublicResults())
+                            @if (auth()->check() && auth()->user()->can('viewResults', $election))
                                 <a href="{{ route('public.elections.results', $election) }}" class="btn btn-outline-dark">View Results</a>
                             @endif
                         </div>

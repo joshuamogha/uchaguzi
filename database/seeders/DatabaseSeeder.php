@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             ], [
                 'name' => 'System Admin',
                 'password' => bcrypt('4UCHAGUZI2know!'),
+                'is_admin' => true,
+                'is_active' => true,
             ]);
         } else {
             User::updateOrCreate([
@@ -30,6 +32,8 @@ class DatabaseSeeder extends Seeder
             ], [
                 'name' => 'System Admin',
                 'password' => bcrypt('4UCHAGUZI2know!'),
+                'is_admin' => true,
+                'is_active' => true,
             ]);
 
             $this->call(ElectionDemoSeeder::class);

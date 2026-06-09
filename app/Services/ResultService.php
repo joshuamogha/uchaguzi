@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CandidateManualTally;
 use App\Models\Election;
 use Illuminate\Support\Collection;
 
@@ -11,39 +12,68 @@ class ResultService
     {
         $registered = $election->voters()->count();
         $voted = $election->voters()->where('has_voted', true)->count();
+        $hasManualTallies = CandidateManualTally::query()
+            ->where('election_id', $election->id)
+            ->exists();
 
         return [
             'registered_voters' => $registered,
             'votes_cast' => $voted,
             'turnout_percentage' => $registered > 0 ? round(($voted / $registered) * 100, 2) : 0,
+            'result_source' => $hasManualTallies ? 'manual' : 'digital',
         ];
     }
 
     public function contestResults(Election $election): array
     {
+        $hasManualTallies = CandidateManualTally::query()
+            ->where('election_id', $election->id)
+            ->exists();
+
         $contests = $election->contests()
-            ->with(['candidates' => fn ($query) => $query
-                ->withCount('selections')
-                ->orderByDesc('selections_count')
-                ->orderBy('name')])
+            ->with([
+                'community',
+                'candidates' => fn ($query) => $query
+                    ->when(
+                        $hasManualTallies,
+                        fn ($candidateQuery) => $candidateQuery
+                            ->with(['manualTallies' => fn ($manualQuery) => $manualQuery->where('election_id', $election->id)])
+                            ->orderBy('sort_order')
+                            ->orderBy('name'),
+                        fn ($candidateQuery) => $candidateQuery
+                            ->withCount('selections')
+                            ->orderByDesc('selections_count')
+                            ->orderBy('name')
+                    ),
+            ])
             ->get();
 
-        return $contests->map(function ($contest) {
+        return $contests->map(function ($contest) use ($hasManualTallies) {
             $previousVotes = null;
             $currentRank = 0;
 
-            $results = $contest->candidates->values()->map(function ($candidate, $index) use (&$previousVotes, &$currentRank) {
-                if ($previousVotes !== $candidate->selections_count) {
-                    $currentRank = $index + 1;
-                    $previousVotes = $candidate->selections_count;
-                }
-
-                return [
+            $results = $contest->candidates
+                ->map(fn ($candidate) => [
                     'candidate' => $candidate,
-                    'votes' => $candidate->selections_count,
-                    'ranking' => $currentRank,
-                ];
-            });
+                    'votes' => $hasManualTallies
+                        ? (int) ($candidate->manualTallies->first()?->votes ?? 0)
+                        : (int) $candidate->selections_count,
+                ])
+                ->sortBy([
+                    ['votes', 'desc'],
+                    ['candidate.name', 'asc'],
+                ])
+                ->values()
+                ->map(function (array $row, int $index) use (&$previousVotes, &$currentRank) {
+                    if ($previousVotes !== $row['votes']) {
+                        $currentRank = $index + 1;
+                        $previousVotes = $row['votes'];
+                    }
+
+                    return $row + [
+                        'ranking' => $currentRank,
+                    ];
+                });
 
             $positiveResults = $results->where('votes', '>', 0)->values();
             $winnerIds = [];
@@ -87,6 +117,7 @@ class ResultService
                 'top_votes' => $topVotes,
                 'second_votes' => $secondVotes,
                 'top_margin' => $topMargin,
+                'source' => $hasManualTallies ? 'manual' : 'digital',
                 'results' => $results->map(fn (array $row) => $row + [
                     'is_winner' => in_array($row['candidate']->id, $winnerIds, true),
                     'is_tied_winner' => in_array($row['candidate']->id, $tiedCandidateIds, true),

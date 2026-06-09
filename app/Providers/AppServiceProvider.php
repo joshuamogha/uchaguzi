@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Election;
+use App\Models\User;
 use App\Policies\ElectionPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Election::class, ElectionPolicy::class);
+        Gate::define('admin-only', fn (User $user) => $user->isAdmin());
         Paginator::useBootstrapFive();
 
         RateLimiter::for('vote-verification', function (Request $request) {

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ElectionController;
 use App\Http\Controllers\Admin\ElectionResultController;
 use App\Http\Controllers\Admin\MemberController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoterController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\PublicElectionController;
@@ -32,34 +33,47 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->scopeBindings()->gro
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
 
-    Route::resource('communities', CommunityController::class)->except('show');
-    Route::resource('church-groups', ChurchGroupController::class)->except('show');
-    Route::resource('members', MemberController::class)->except('show');
-    Route::resource('elections', ElectionController::class)->except('show');
-
-    Route::get('/elections/{election}/contests', [ElectionContestController::class, 'index'])->name('elections.contests.index');
-    Route::get('/elections/{election}/contests/create', [ElectionContestController::class, 'create'])->name('elections.contests.create');
-    Route::post('/elections/{election}/contests', [ElectionContestController::class, 'store'])->name('elections.contests.store');
-    Route::get('/elections/{election}/contests/{contest}/edit', [ElectionContestController::class, 'edit'])->name('elections.contests.edit');
-    Route::put('/elections/{election}/contests/{contest}', [ElectionContestController::class, 'update'])->name('elections.contests.update');
-    Route::delete('/elections/{election}/contests/{contest}', [ElectionContestController::class, 'destroy'])->name('elections.contests.destroy');
-
-    Route::get('/elections/{election}/candidates', [CandidateController::class, 'index'])->name('elections.candidates.index');
+    Route::get('/elections', [ElectionController::class, 'index'])->name('elections.index');
     Route::get('/elections/{election}/candidates/export-sheet', [CandidateController::class, 'exportSheet'])->name('elections.candidates.export-sheet');
-    Route::get('/elections/{election}/contests/{contest}/candidates/create', [CandidateController::class, 'create'])->name('elections.candidates.create');
-    Route::post('/elections/{election}/contests/{contest}/candidates', [CandidateController::class, 'store'])->name('elections.candidates.store');
-    Route::get('/elections/{election}/contests/{contest}/candidates/{candidate}/edit', [CandidateController::class, 'edit'])->name('elections.candidates.edit');
-    Route::put('/elections/{election}/contests/{contest}/candidates/{candidate}', [CandidateController::class, 'update'])->name('elections.candidates.update');
-    Route::delete('/elections/{election}/contests/{contest}/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('elections.candidates.destroy');
+    Route::get('/elections/{election}/results/manual-entry', [ElectionResultController::class, 'editManualEntry'])->name('elections.results.manual-entry');
+    Route::post('/elections/{election}/results/manual-entry/ballots', [ElectionResultController::class, 'storeManualBallot'])->name('elections.results.manual-entry.ballots.store');
 
-    Route::get('/elections/{election}/voters', [VoterController::class, 'index'])->name('elections.voters.index');
-    Route::post('/elections/{election}/voters/generate', [VoterController::class, 'generate'])->name('elections.voters.generate');
-    Route::get('/elections/{election}/voters/cards', [VoterController::class, 'cards'])->name('elections.voters.cards');
-    Route::patch('/elections/{election}/voters/{voter}/eligibility', [VoterController::class, 'toggleEligibility'])->name('elections.voters.toggle-eligibility');
+    Route::middleware('can:admin-only')->group(function () {
+        Route::resource('communities', CommunityController::class)->except('show');
+        Route::resource('church-groups', ChurchGroupController::class)->except('show');
+        Route::resource('members', MemberController::class)->except('show');
+        Route::resource('users', UserController::class)->only(['index', 'create', 'store', 'edit', 'update']);
 
-    Route::get('/elections/{election}/results', [ElectionResultController::class, 'index'])->name('elections.results.index');
-    Route::get('/elections/{election}/results/export', [ElectionResultController::class, 'export'])->name('elections.results.export');
-    Route::post('/elections/{election}/results/{contest}/runoff', [ElectionResultController::class, 'createRunoff'])->name('elections.results.runoff');
+        Route::get('/elections/create', [ElectionController::class, 'create'])->name('elections.create');
+        Route::post('/elections', [ElectionController::class, 'store'])->name('elections.store');
+        Route::get('/elections/{election}/edit', [ElectionController::class, 'edit'])->name('elections.edit');
+        Route::put('/elections/{election}', [ElectionController::class, 'update'])->name('elections.update');
+        Route::delete('/elections/{election}', [ElectionController::class, 'destroy'])->name('elections.destroy');
+
+        Route::get('/elections/{election}/contests', [ElectionContestController::class, 'index'])->name('elections.contests.index');
+        Route::get('/elections/{election}/contests/create', [ElectionContestController::class, 'create'])->name('elections.contests.create');
+        Route::post('/elections/{election}/contests', [ElectionContestController::class, 'store'])->name('elections.contests.store');
+        Route::get('/elections/{election}/contests/{contest}/edit', [ElectionContestController::class, 'edit'])->name('elections.contests.edit');
+        Route::put('/elections/{election}/contests/{contest}', [ElectionContestController::class, 'update'])->name('elections.contests.update');
+        Route::delete('/elections/{election}/contests/{contest}', [ElectionContestController::class, 'destroy'])->name('elections.contests.destroy');
+
+        Route::get('/elections/{election}/candidates', [CandidateController::class, 'index'])->name('elections.candidates.index');
+        Route::get('/elections/{election}/contests/{contest}/candidates/create', [CandidateController::class, 'create'])->name('elections.candidates.create');
+        Route::post('/elections/{election}/contests/{contest}/candidates', [CandidateController::class, 'store'])->name('elections.candidates.store');
+        Route::get('/elections/{election}/contests/{contest}/candidates/{candidate}/edit', [CandidateController::class, 'edit'])->name('elections.candidates.edit');
+        Route::put('/elections/{election}/contests/{contest}/candidates/{candidate}', [CandidateController::class, 'update'])->name('elections.candidates.update');
+        Route::delete('/elections/{election}/contests/{contest}/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('elections.candidates.destroy');
+
+        Route::get('/elections/{election}/voters', [VoterController::class, 'index'])->name('elections.voters.index');
+        Route::post('/elections/{election}/voters/generate', [VoterController::class, 'generate'])->name('elections.voters.generate');
+        Route::get('/elections/{election}/voters/cards', [VoterController::class, 'cards'])->name('elections.voters.cards');
+        Route::patch('/elections/{election}/voters/{voter}/eligibility', [VoterController::class, 'toggleEligibility'])->name('elections.voters.toggle-eligibility');
+
+        Route::get('/elections/{election}/results', [ElectionResultController::class, 'index'])->name('elections.results.index');
+        Route::put('/elections/{election}/results/manual-entry', [ElectionResultController::class, 'updateManualEntry'])->name('elections.results.manual-entry.update');
+        Route::get('/elections/{election}/results/export', [ElectionResultController::class, 'export'])->name('elections.results.export');
+        Route::post('/elections/{election}/results/{contest}/runoff', [ElectionResultController::class, 'createRunoff'])->name('elections.results.runoff');
+    });
 });
 
 Route::get('/vote/verify', [VotingController::class, 'showVerifyForm'])->name('vote.verify.form');

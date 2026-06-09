@@ -4,13 +4,31 @@
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-4">
         <div>
             <h1 class="h2 mb-1">Election Results</h1>
-            <p class="page-subtle mb-0">{{ $election->title }} | Registered: {{ $summary['registered_voters'] }} | Cast: {{ $summary['votes_cast'] }} | Turnout: {{ $summary['turnout_percentage'] }}%</p>
+            <p class="page-subtle mb-0">
+                {{ $election->title }}
+                @if ($summary['result_source'] === 'manual')
+                    | Source: Manual tally entry
+                @else
+                    | Registered: {{ $summary['registered_voters'] }} | Cast: {{ $summary['votes_cast'] }} | Turnout: {{ $summary['turnout_percentage'] }}%
+                @endif
+            </p>
         </div>
         <div class="d-flex gap-2 mt-3 mt-lg-0">
             <a class="btn btn-outline-secondary" href="{{ route('admin.elections.index') }}">Back</a>
-            <a class="btn btn-primary" href="{{ route('admin.elections.results.export', $election) }}">Export CSV</a>
+            @can('manageResults', $election)
+                <a class="btn btn-outline-dark" href="{{ route('admin.elections.results.manual-entry', $election) }}">{{ $hasManualTallies ? 'Edit Manual Results' : 'Enter Manual Results' }}</a>
+            @endcan
+            @can('exportResults', $election)
+                <a class="btn btn-primary" href="{{ route('admin.elections.results.export', $election) }}">Export CSV</a>
+            @endcan
         </div>
     </div>
+
+    @if ($summary['result_source'] === 'manual')
+        <div class="alert alert-warning mb-4">
+            This report is currently using manually entered vote totals from the paper candidate sheets.
+        </div>
+    @endif
 
     <div class="row g-4 mb-4">
         <div class="col-xl-7">

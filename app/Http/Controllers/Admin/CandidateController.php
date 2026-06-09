@@ -25,7 +25,7 @@ class CandidateController extends Controller
 
     public function exportSheet(Election $election): View
     {
-        $this->authorize('view', $election);
+        $this->authorize('enterManualBallots', $election);
 
         $contests = $election->contests()
             ->with([

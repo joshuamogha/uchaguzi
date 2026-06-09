@@ -199,6 +199,7 @@
 @php
     $isAdminArea = auth()->check() && request()->routeIs('admin.*');
     $currentElection = request()->route('election');
+    $isAdminUser = auth()->check() && auth()->user()->isAdmin();
 @endphp
 
 <main class="{{ $isAdminArea ? 'py-0' : 'py-4 py-lg-5' }}">
@@ -209,7 +210,7 @@
                     <div class="sidebar-header p-4">
                         <div class="small text-uppercase fw-semibold opacity-75 mb-2">Administration</div>
                         <div class="h5 mb-1">Control Panel</div>
-                        <div class="small opacity-75">Manage master data, elections, voter lists, and reports.</div>
+                        {{-- <div class="small opacity-75">Manage master data, elections, voter lists, and reports.</div> --}}
                     </div>
                     <div class="p-3">
                         <div class="sidebar-user-card p-3 mb-4">
@@ -227,31 +228,42 @@
                         <div class="sidebar-section-title">Core</div>
                         <nav class="nav flex-column gap-1 mb-4">
                             <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a>
-                            <a class="nav-link {{ request()->routeIs('admin.communities.*') ? 'active' : '' }}" href="{{ route('admin.communities.index') }}">Communities</a>
-                            <a class="nav-link {{ request()->routeIs('admin.church-groups.*') ? 'active' : '' }}" href="{{ route('admin.church-groups.index') }}">Church Groups</a>
-                            <a class="nav-link {{ request()->routeIs('admin.members.*') ? 'active' : '' }}" href="{{ route('admin.members.index') }}">Members</a>
                             <a class="nav-link {{ request()->routeIs('admin.elections.*') ? 'active' : '' }}" href="{{ route('admin.elections.index') }}">Elections</a>
+                            @if ($isAdminUser)
+                                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">Users</a>
+                                <a class="nav-link {{ request()->routeIs('admin.communities.*') ? 'active' : '' }}" href="{{ route('admin.communities.index') }}">Communities</a>
+                                <a class="nav-link {{ request()->routeIs('admin.church-groups.*') ? 'active' : '' }}" href="{{ route('admin.church-groups.index') }}">Church Groups</a>
+                                <a class="nav-link {{ request()->routeIs('admin.members.*') ? 'active' : '' }}" href="{{ route('admin.members.index') }}">Members</a>
+                            @endif
                         </nav>
 
                         @if ($currentElection)
                             <div class="sidebar-section-title">Current Election</div>
                             <div class="small text-muted mb-3">{{ $currentElection->title }}</div>
                             <nav class="nav flex-column gap-1 mb-4">
-                                <a class="nav-link {{ request()->routeIs('admin.elections.contests.*') ? 'active' : '' }}" href="{{ route('admin.elections.contests.index', $currentElection) }}">Contests</a>
-                                <a class="nav-link {{ request()->routeIs('admin.elections.candidates.*') ? 'active' : '' }}" href="{{ route('admin.elections.candidates.index', $currentElection) }}">Candidates</a>
-                                <a class="nav-link {{ request()->routeIs('admin.elections.voters.*') ? 'active' : '' }}" href="{{ route('admin.elections.voters.index', $currentElection) }}">Voters</a>
-                                <a class="nav-link {{ request()->routeIs('admin.elections.results.*') ? 'active' : '' }}" href="{{ route('admin.elections.results.index', $currentElection) }}">Results Report</a>
+                                <a class="nav-link {{ request()->routeIs('admin.elections.results.manual-entry') ? 'active' : '' }}" href="{{ route('admin.elections.results.manual-entry', $currentElection) }}">Manual Ballot Entry</a>
                                 <a class="nav-link" href="{{ route('public.elections.candidates', $currentElection) }}" target="_blank">Public Candidate Page</a>
-                                <a class="nav-link" href="{{ route('public.elections.results', $currentElection) }}" target="_blank">Public Results Page</a>
+                                <a class="nav-link" href="{{ route('admin.elections.candidates.export-sheet', $currentElection) }}" target="_blank">Candidate Sheet</a>
+                                @if ($isAdminUser)
+                                    <a class="nav-link {{ request()->routeIs('admin.elections.contests.*') ? 'active' : '' }}" href="{{ route('admin.elections.contests.index', $currentElection) }}">Contests</a>
+                                    <a class="nav-link {{ request()->routeIs('admin.elections.candidates.*') ? 'active' : '' }}" href="{{ route('admin.elections.candidates.index', $currentElection) }}">Candidates</a>
+                                    <a class="nav-link {{ request()->routeIs('admin.elections.voters.*') ? 'active' : '' }}" href="{{ route('admin.elections.voters.index', $currentElection) }}">Voters</a>
+                                    @can('viewResults', $currentElection)
+                                        <a class="nav-link {{ request()->routeIs('admin.elections.results.*') ? 'active' : '' }}" href="{{ route('admin.elections.results.index', $currentElection) }}">Results Report</a>
+                                        <a class="nav-link" href="{{ route('public.elections.results', $currentElection) }}" target="_blank">Public Results Page</a>
+                                    @endcan
+                                @endif
                             </nav>
                         @endif
 
-                        <div class="sidebar-section-title">Shortcuts</div>
-                        <nav class="nav flex-column gap-1">
-                            <a class="nav-link" href="{{ route('admin.elections.create') }}">Create Election</a>
-                            <a class="nav-link" href="{{ route('admin.members.create') }}">Add Member</a>
-                            <a class="nav-link" href="{{ route('admin.communities.create') }}">Add Community</a>
-                        </nav>
+                        @if ($isAdminUser)
+                            <div class="sidebar-section-title">Shortcuts</div>
+                            <nav class="nav flex-column gap-1">
+                                <a class="nav-link" href="{{ route('admin.elections.create') }}">Create Election</a>
+                                <a class="nav-link" href="{{ route('admin.members.create') }}">Add Member</a>
+                                <a class="nav-link" href="{{ route('admin.communities.create') }}">Add Community</a>
+                            </nav>
+                        @endif
 
                         <div class="sidebar-section-title mt-4">Account</div>
                         <nav class="nav flex-column gap-1">

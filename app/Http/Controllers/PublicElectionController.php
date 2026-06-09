@@ -30,7 +30,7 @@ class PublicElectionController extends Controller
 
     public function results(Election $election): View
     {
-        abort_unless($election->canShowPublicResults() || Auth::check(), 403);
+        abort_unless(Auth::check() && Auth::user()?->can('viewResults', $election), 403);
 
         return view('public.results', [
             'election' => $election,

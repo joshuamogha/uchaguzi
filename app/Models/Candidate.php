@@ -54,6 +54,11 @@ class Candidate extends Model
         return $this->hasMany(BallotSelection::class);
     }
 
+    public function manualTallies(): HasMany
+    {
+        return $this->hasMany(CandidateManualTally::class);
+    }
+
     public function getPhotoUrlAttribute(): string
     {
         if ($this->photo && Storage::disk('public')->exists($this->photo)) {

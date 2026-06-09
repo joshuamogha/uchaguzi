@@ -7,21 +7,37 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ElectionRequest;
 use App\Models\ChurchGroup;
 use App\Models\Election;
+use App\Services\ManualResultService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class ElectionController extends Controller
 {
+    public function __construct(
+        private readonly ManualResultService $manualResultService,
+    ) {
+    }
+
     public function index(): View
     {
+        $elections = Election::query()->with('churchGroup')->latest()->paginate(15);
+        $elections->getCollection()->transform(function (Election $election) {
+            $election->entered_ballots = $this->manualResultService->enteredBallots($election);
+
+            return $election;
+        });
+
         return view('admin.elections.index', [
-            'elections' => Election::query()->with('churchGroup')->latest()->paginate(15),
+            'elections' => $elections,
             'statuses' => ElectionStatus::cases(),
+            'isAdmin' => auth()->user()?->isAdmin() ?? false,
         ]);
     }
 
     public function create(): View
     {
+        $this->authorize('create', Election::class);
+
         return view('admin.elections.form', [
             'election' => new Election([
                 'status' => ElectionStatus::Draft,
@@ -36,6 +52,7 @@ class ElectionController extends Controller
 
     public function store(ElectionRequest $request): RedirectResponse
     {
+        $this->authorize('create', Election::class);
         $election = Election::create($request->validated());
 
         return redirect()->route('admin.elections.contests.index', $election)->with('success', 'Election created successfully.');

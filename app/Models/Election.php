@@ -50,6 +50,11 @@ class Election extends Model
         return $this->hasMany(Candidate::class)->orderBy('sort_order')->orderBy('name');
     }
 
+    public function manualTallies(): HasMany
+    {
+        return $this->hasMany(CandidateManualTally::class);
+    }
+
     public function voters(): HasMany
     {
         return $this->hasMany(Voter::class);
