@@ -136,8 +136,8 @@
                             <div class="card-body">
                                 <div class="manual-sheet-title">{{ $contest->community?->name ?: $contest->name }}</div>
                                 <div class="manual-sheet-meta">
-                                    {{ $contest->name }} | Chagua {{ $contest->required_selections }}
-                                    {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }}
+                                    {{ $contest->name }} | Chagua 
+                                    {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }} {{ $contest->required_selections }}
                                 </div>
 
                                 @foreach ($contest->candidates as $candidate)
@@ -147,7 +147,7 @@
                                     <div class="manual-sheet-option {{ $selected ? 'is-selected' : '' }}">
                                         <label>
                                             <span class="manual-sheet-option-name">{{ $candidate->name }}</span>
-                                            <span class="manual-sheet-option-tally">Total: {{ $candidate->manualTallies->first()?->votes ?? 0 }}</span>
+                                            {{-- <span class="manual-sheet-option-tally">Total: {{ $candidate->manualTallies->first()?->votes ?? 0 }}</span> --}}
                                             <span class="manual-sheet-tick" aria-hidden="true"></span>
                                             <input
                                                 class="manual-ballot-choice"
