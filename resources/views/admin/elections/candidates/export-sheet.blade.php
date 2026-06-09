@@ -18,9 +18,9 @@
 
         .page {
             width: 100%;
-            max-width: 1220px;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 8px 10px 12px;
+            padding: 16px 18px 20px;
         }
 
         .toolbar {
@@ -132,7 +132,7 @@
 
         @page {
             size: A4 portrait;
-            margin: 6mm;
+            margin: 12mm 14mm;
         }
 
         @media (max-width: 768px) {
