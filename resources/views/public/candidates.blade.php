@@ -21,7 +21,7 @@
             </div>
             <div class="row g-4">
                 @foreach ($contest->candidates as $candidate)
-                    <div class="col-md-6 col-xl-3">
+                    <div class="col-md-6">
                         <div class="card selection-card surface-card">
                             <img src="{{ $candidate->photo_url }}" alt="{{ $candidate->name }}" class="candidate-photo">
                             <div class="card-body">

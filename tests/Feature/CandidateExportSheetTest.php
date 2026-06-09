@@ -58,7 +58,9 @@ test('authenticated users can open the printable candidate export sheet', functi
         ->get(route('admin.elections.candidates.export-sheet', $election));
 
     $response->assertOk();
-    $response->assertSeeText('JIMBO LA MAGHARIBI - USHARIKA WA TEMBONI');
+    $response->assertSeeText('DAYOSISI MASHARIKI NA PWANI,');
+    $response->assertSeeText('JIMBO LA MAGHARIBI');
+    $response->assertSeeText('USHARIKA WA TEMBONI');
     $response->assertSeeText('KARATASI YA KURA YA UCHAGUZI WA WAZEE WA KANISANI');
     $response->assertSeeText('14.06.2026');
     $response->assertSeeText('MAVURUNZA');

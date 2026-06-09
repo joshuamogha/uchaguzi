@@ -18,15 +18,15 @@
 
         .page {
             width: 100%;
-            max-width: 1180px;
+            max-width: 1220px;
             margin: 0 auto;
-            padding: 12px 14px 18px;
+            padding: 8px 10px 12px;
         }
 
         .toolbar {
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .print-button {
@@ -41,68 +41,77 @@
 
         .sheet-title {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .sheet-title h1,
         .sheet-title h2,
+        .sheet-title h3,
         .sheet-title p {
             margin: 0;
         }
 
         .sheet-title h1 {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 800;
             text-transform: uppercase;
             line-height: 1.15;
         }
 
         .sheet-title h2 {
-            margin-top: 4px;
-            font-size: 20px;
+            margin-top: 1px;
+            font-size: 17px;
             font-weight: 800;
             text-transform: uppercase;
-            line-height: 1.2;
+            line-height: 1.15;
+        }
+
+        .sheet-title h3 {
+            margin-top: 1px;
+            font-size: 17px;
+            font-weight: 800;
+            text-transform: uppercase;
+            line-height: 1.15;
         }
 
         .sheet-title p {
-            margin-top: 4px;
-            font-size: 15px;
+            margin-top: 3px;
+            font-size: 13px;
             font-weight: 700;
         }
 
         .contest-grid {
             column-count: 2;
-            column-gap: 18px;
+            column-gap: 12px;
         }
 
         .contest-card {
             border: 2px solid #333;
-            padding: 8px 12px 10px;
+            padding: 6px 8px 7px;
             break-inside: avoid;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             width: 100%;
             display: inline-block;
         }
 
         .contest-name {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 800;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .contest-meta {
-            font-size: 11px;
-            margin-bottom: 6px;
+            font-size: 10px;
+            margin-bottom: 4px;
         }
 
         .candidate-row {
             display: grid;
-            grid-template-columns: 1fr 28px;
-            gap: 8px;
+            grid-template-columns: 1fr 22px;
+            gap: 6px;
             align-items: center;
-            margin-bottom: 2px;
+            margin-bottom: 1px;
         }
 
         .candidate-row:last-child {
@@ -110,20 +119,20 @@
         }
 
         .candidate-name {
-            font-size: 14px;
-            line-height: 1.15;
+            font-size: 12px;
+            line-height: 1.1;
             text-transform: uppercase;
         }
 
         .tick-box {
-            width: 28px;
-            height: 22px;
-            border: 2px solid #444;
+            width: 22px;
+            height: 18px;
+            border: 1.5px solid #444;
         }
 
         @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
         }
 
         @media (max-width: 768px) {
@@ -132,15 +141,19 @@
             }
 
             .sheet-title h1 {
-                font-size: 18px;
-            }
-
-            .sheet-title h2 {
                 font-size: 16px;
             }
 
+            .sheet-title h2 {
+                font-size: 15px;
+            }
+
+            .sheet-title h3 {
+                font-size: 15px;
+            }
+
             .sheet-title p {
-                font-size: 13px;
+                font-size: 12px;
             }
         }
 
@@ -156,7 +169,7 @@
 
             .contest-grid {
                 column-count: 2;
-                column-gap: 14px;
+                column-gap: 10px;
             }
         }
     </style>
@@ -168,15 +181,15 @@
         </div>
 
         <div class="sheet-title">
-            <h1>
-                {{ strtoupper($election->churchGroup?->name ?? config('app.name', 'Election System')) }}
-            </h1>
-            <h2>
+            <h1>DAYOSISI MASHARIKI NA PWANI,</h1>
+            <h2>JIMBO LA MAGHARIBI</h2>
+            <h3>USHARIKA WA TEMBONI</h3>
+            <p>
                 {{ strtoupper($election->title) }}
                 @if ($election->start_at)
                     {{ $election->start_at->format('d.m.Y') }}
                 @endif
-            </h2>
+            </p>
             <p>{{ $instructionLine }}</p>
         </div>
 
@@ -185,8 +198,8 @@
                 <section class="contest-card">
                     <div class="contest-name">{{ strtoupper($contest->display_name) }}</div>
                     <div class="contest-meta">
-                        Chagua {{ $contest->required_selections }}
-                        {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }}
+                        Chagua 
+                        {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }} {{ $contest->required_selections }}
                     </div>
 
                     @foreach ($contest->candidates as $candidate)
