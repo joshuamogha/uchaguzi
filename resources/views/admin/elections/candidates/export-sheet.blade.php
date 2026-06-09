@@ -18,9 +18,9 @@
 
         .page {
             width: 100%;
-            max-width: 980px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 16px 18px 20px;
+            padding: 10px 12px 14px;
         }
 
         .toolbar {
@@ -82,14 +82,14 @@
 
         .contest-grid {
             column-count: 2;
-            column-gap: 12px;
+            column-gap: 16px;
         }
 
         .contest-card {
             border: 2px solid #333;
-            padding: 6px 8px 7px;
+            padding: 8px 10px 10px;
             break-inside: avoid;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             width: 100%;
             display: inline-block;
         }
@@ -103,7 +103,8 @@
 
         .contest-meta {
             font-size: 10px;
-            margin-bottom: 4px;
+            margin-bottom: 10px;
+            text-align: center;
         }
 
         .candidate-row {
@@ -111,16 +112,16 @@
             grid-template-columns: 1fr 22px;
             gap: 6px;
             align-items: center;
-            margin-bottom: 1px;
+            margin-bottom: 12px;
         }
 
         .candidate-row:last-child {
-            margin-bottom: 0;
+            margin-bottom: 4px;
         }
 
         .candidate-name {
-            font-size: 12px;
-            line-height: 1.1;
+            font-size: 14px;
+            line-height: 1.45;
             text-transform: uppercase;
         }
 
@@ -132,7 +133,7 @@
 
         @page {
             size: A4 portrait;
-            margin: 12mm 14mm;
+            margin: 8mm 10mm;
         }
 
         @media (max-width: 768px) {
@@ -197,9 +198,9 @@
             @foreach ($contests as $contest)
                 <section class="contest-card">
                     <div class="contest-name">{{ strtoupper($contest->display_name) }}</div>
-                    <div class="contest-meta">
-                        Chagua 
-                        {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }} {{ $contest->required_selections }}
+                    <div class="contest-meta d-flex justify-content-center">
+                        <h2 class="text-bold text-center">Chagua 
+                        {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }} {{ $contest->required_selections }}</h2>
                     </div>
 
                     @foreach ($contest->candidates as $candidate)
