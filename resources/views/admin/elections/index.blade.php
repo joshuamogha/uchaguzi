@@ -27,6 +27,7 @@
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.elections.results.manual-entry', $election) }}">{{ $isAdmin ? 'Manual Entry' : 'Enter Ballot' }}</a>
                                 <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.elections.candidates.export-sheet', $election) }}" target="_blank">Candidate Sheet</a>
+                                <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.elections.candidates.export-contest-pdf', $election) }}" target="_blank">Candidate List PDF</a>
                                 @if ($isAdmin)
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.elections.edit', $election) }}">Edit</a>
                                     <a class="btn btn-sm btn-outline-dark" href="{{ route('admin.elections.contests.index', $election) }}">Contests</a>

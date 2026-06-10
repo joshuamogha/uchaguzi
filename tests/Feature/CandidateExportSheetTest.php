@@ -67,3 +67,62 @@ test('authenticated users can open the printable candidate export sheet', functi
     $response->assertSeeText('EMMANUEL NDANSHAU');
     $response->assertSeeText('GERVAS SIMON');
 });
+
+test('authenticated users can open the contest grouped candidate list pdf view', function () {
+    $user = User::factory()->create();
+    $group = ChurchGroup::create([
+        'name' => 'Jimbo la Magharibi - Usharika wa Temboni',
+        'is_active' => true,
+    ]);
+    $community = Community::create([
+        'name' => 'Mavurunza',
+        'is_active' => true,
+    ]);
+    $election = Election::create([
+        'church_group_id' => $group->id,
+        'title' => 'Uchaguzi wa wajumbe',
+        'start_at' => '2026-06-14 09:00:00',
+        'end_at' => '2026-06-14 18:00:00',
+        'status' => ElectionStatus::Draft,
+    ]);
+    $contest = ElectionContest::create([
+        'election_id' => $election->id,
+        'community_id' => $community->id,
+        'name' => 'Mavurunza Elders',
+        'contest_type' => ContestType::Community,
+        'required_selections' => 1,
+        'min_selections' => 1,
+        'max_selections' => 1,
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+
+    Candidate::create([
+        'election_id' => $election->id,
+        'election_contest_id' => $contest->id,
+        'name' => 'Emmanuel Ndanshau',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    Candidate::create([
+        'election_id' => $election->id,
+        'election_contest_id' => $contest->id,
+        'name' => 'Gervas Simon',
+        'sort_order' => 2,
+        'is_active' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get(route('admin.elections.candidates.export-contest-pdf', $election));
+
+    $response->assertOk();
+    $response->assertSeeText('DAYOSISI YA MASHARIKI NA PWANI');
+    $response->assertSeeText('JIMBO LA MAGHARIBI');
+    $response->assertSeeText('ORODHA YA MAJINA YALIYOPENDEKEZWA KWENYE UCHAGUZI WA WAJUMBE');
+    $response->assertSeeText('MAVURUNZA');
+    $response->assertSeeText('EMMANUEL NDANSHAU');
+    $response->assertSeeText('GERVAS SIMON');
+    $response->assertDontSeeText('Weka tiki');
+    $response->assertDontSee('tick-box', false);
+});

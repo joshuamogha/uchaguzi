@@ -244,6 +244,7 @@
                                 <a class="nav-link {{ request()->routeIs('admin.elections.results.manual-entry') ? 'active' : '' }}" href="{{ route('admin.elections.results.manual-entry', $currentElection) }}">Manual Ballot Entry</a>
                                 <a class="nav-link" href="{{ route('public.elections.candidates', $currentElection) }}" target="_blank">Public Candidate Page</a>
                                 <a class="nav-link" href="{{ route('admin.elections.candidates.export-sheet', $currentElection) }}" target="_blank">Candidate Sheet</a>
+                                <a class="nav-link" href="{{ route('admin.elections.candidates.export-contest-pdf', $currentElection) }}" target="_blank">Candidate List PDF</a>
                                 @if ($isAdminUser)
                                     <a class="nav-link {{ request()->routeIs('admin.elections.contests.*') ? 'active' : '' }}" href="{{ route('admin.elections.contests.index', $currentElection) }}">Contests</a>
                                     <a class="nav-link {{ request()->routeIs('admin.elections.candidates.*') ? 'active' : '' }}" href="{{ route('admin.elections.candidates.index', $currentElection) }}">Candidates</a>

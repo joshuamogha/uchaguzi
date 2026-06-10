@@ -27,20 +27,7 @@ class CandidateController extends Controller
     {
         $this->authorize('enterManualBallots', $election);
 
-        $contests = $election->contests()
-            ->with([
-                'community',
-                'candidates' => fn ($query) => $query->where('is_active', true)->with('member'),
-            ])
-            ->where('is_active', true)
-            ->get()
-            ->filter(fn (ElectionContest $contest) => $contest->candidates->isNotEmpty())
-            ->values()
-            ->map(function (ElectionContest $contest) {
-                $contest->display_name = $contest->community?->name ?: $contest->name;
-
-                return $contest;
-            });
+        $contests = $this->exportableContests($election);
 
         $instructionLine = $contests->every(fn (ElectionContest $contest) => $contest->required_selections === 1)
             ? 'Weka tiki (✓) moja kwa kila jumuiya / nafasi'
@@ -50,6 +37,16 @@ class CandidateController extends Controller
             'election' => $election->load('churchGroup'),
             'contests' => $contests,
             'instructionLine' => $instructionLine,
+        ]);
+    }
+
+    public function exportContestPdf(Election $election): View
+    {
+        $this->authorize('enterManualBallots', $election);
+
+        return view('admin.elections.candidates.export-contest-pdf', [
+            'election' => $election->load('churchGroup'),
+            'contests' => $this->exportableContests($election),
         ]);
     }
 
@@ -129,5 +126,29 @@ class CandidateController extends Controller
         $candidate->delete();
 
         return redirect()->route('admin.elections.candidates.index', $election)->with('success', 'Candidate removed successfully.');
+    }
+
+    private function exportableContests(Election $election)
+    {
+        return $election->contests()
+            ->with([
+                'community',
+                'candidates' => fn ($query) => $query
+                    ->where('is_active', true)
+                    ->with('member')
+                    ->orderBy('sort_order')
+                    ->orderBy('name'),
+            ])
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->filter(fn (ElectionContest $contest) => $contest->candidates->isNotEmpty())
+            ->values()
+            ->map(function (ElectionContest $contest) {
+                $contest->display_name = $contest->community?->name ?: $contest->name;
+
+                return $contest;
+            });
     }
 }

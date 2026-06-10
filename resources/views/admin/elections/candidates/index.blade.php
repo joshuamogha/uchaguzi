@@ -8,6 +8,7 @@
         </div>
         <div class="d-flex flex-column flex-sm-row gap-2 mt-3 mt-lg-0">
             <a class="btn btn-outline-dark" href="{{ route('admin.elections.candidates.export-sheet', $election) }}" target="_blank">Export Candidate Sheet</a>
+            <a class="btn btn-outline-dark" href="{{ route('admin.elections.candidates.export-contest-pdf', $election) }}" target="_blank">Export Candidate List PDF</a>
             <a class="btn btn-outline-secondary" href="{{ route('admin.elections.contests.index', $election) }}">Back to Contests</a>
         </div>
     </div>

@@ -103,6 +103,7 @@
         </div>
         <div class="d-flex gap-2 mt-3 mt-lg-0">
             <a class="btn btn-outline-dark" href="{{ route('admin.elections.candidates.export-sheet', $election) }}" target="_blank">Open Candidate Sheet</a>
+            <a class="btn btn-outline-dark" href="{{ route('admin.elections.candidates.export-contest-pdf', $election) }}" target="_blank">Open Candidate List PDF</a>
             @can('viewResults', $election)
                 <a class="btn btn-outline-secondary" href="{{ route('admin.elections.results.index', $election) }}">Back to Results</a>
             @else

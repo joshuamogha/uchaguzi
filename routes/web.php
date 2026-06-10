@@ -35,6 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->scopeBindings()->gro
 
     Route::get('/elections', [ElectionController::class, 'index'])->name('elections.index');
     Route::get('/elections/{election}/candidates/export-sheet', [CandidateController::class, 'exportSheet'])->name('elections.candidates.export-sheet');
+    Route::get('/elections/{election}/candidates/export-contest-pdf', [CandidateController::class, 'exportContestPdf'])->name('elections.candidates.export-contest-pdf');
     Route::get('/elections/{election}/results/manual-entry', [ElectionResultController::class, 'editManualEntry'])->name('elections.results.manual-entry');
     Route::post('/elections/{election}/results/manual-entry/ballots', [ElectionResultController::class, 'storeManualBallot'])->name('elections.results.manual-entry.ballots.store');
 
