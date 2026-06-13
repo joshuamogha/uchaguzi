@@ -178,7 +178,7 @@
                                 <div class="manual-sheet-meta">
                                     {{ $contest->name }} | Chagua 
                                     {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }} {{ $contest->required_selections }}
-                                    | Destroyed entries: {{ $destroyedCount }}
+                                    {{-- | Destroyed entries: {{ $destroyedCount }} --}}
                                 </div>
 
                                 @foreach ($contest->candidates as $candidate)
