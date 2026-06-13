@@ -60,6 +60,7 @@ class ElectionResultController extends Controller
                 ->get(),
             'enteredBallots' => $this->manualResultService->enteredBallots($election),
             'destroyedContests' => $this->manualResultService->destroyedContests($election),
+            'blankContests' => $this->manualResultService->blankContests($election),
             'recentManualEntries' => $this->manualResultService->recentManualEntries($election),
             'isReadOnly' => $election->status === ElectionStatus::Closed,
         ]);
@@ -81,6 +82,7 @@ class ElectionResultController extends Controller
             $election,
             $request->validated('selections', []),
             array_keys(array_filter($request->input('destroyed_contests', []))),
+            array_keys(array_filter($request->input('blank_contests', []))),
             $request->user(),
             $request,
         );

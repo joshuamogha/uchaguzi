@@ -170,6 +170,7 @@
                 Chanzo: {{ $summary['result_source'] === 'manual' ? 'Uingizaji wa matokeo kwa mkono' : 'Upigaji kura wa kidijitali' }}
                 @if ($summary['result_source'] === 'manual')
                     | Karatasi za kura zilizoingizwa: {{ $summary['manual_ballots_entered'] }}
+                    | Nafasi tupu: {{ $summary['blank_manual_entries'] }}
                     | Kura zilizoharibika: {{ $summary['destroyed_manual_entries'] }}
                 @else
                     | Kura zilizopigwa: {{ $summary['votes_cast'] }}
@@ -191,6 +192,10 @@
                 <div class="summary-label">Kura Zilizoharibika</div>
                 <div class="summary-value">{{ $summary['result_source'] === 'manual' ? $summary['destroyed_manual_entries'] : 0 }}</div>
             </div>
+            <div class="summary-box">
+                <div class="summary-label">Nafasi Tupu</div>
+                <div class="summary-value">{{ $summary['result_source'] === 'manual' ? $summary['blank_manual_entries'] : 0 }}</div>
+            </div>
         </div>
 
         @foreach ($contestResults as $contestResult)
@@ -199,6 +204,7 @@
                 <p class="contest-meta">
                     Nafasi: {{ $loop->iteration }} kati ya {{ count($contestResults) }}
                     | Jumla ya kura: {{ $contestResult['total_votes'] }}
+                    | Nafasi tupu: {{ $contestResult['blank_entries'] }}
                     | Kura zilizoharibika: {{ $contestResult['destroyed_entries'] }}
                     | Kura za juu zaidi: {{ $contestResult['top_votes'] }}
                     | Wenye kura nyingi:

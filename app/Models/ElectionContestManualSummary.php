@@ -14,6 +14,7 @@ class ElectionContestManualSummary extends Model
         'election_id',
         'election_contest_id',
         'destroyed_entries',
+        'blank_entries',
     ];
 
     public function election(): BelongsTo

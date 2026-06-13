@@ -18,6 +18,7 @@ class ManualBallotEntryRequest extends FormRequest
         return [
             'selections' => ['nullable', 'array'],
             'destroyed_contests' => ['nullable', 'array'],
+            'blank_contests' => ['nullable', 'array'],
         ];
     }
 
@@ -43,8 +44,22 @@ class ManualBallotEntryRequest extends FormRequest
                     ->keys()
                     ->map(fn ($value) => (int) $value)
                     ->all();
+                $blankContests = collect($this->input('blank_contests', []))
+                    ->filter(fn ($value) => filled($value))
+                    ->keys()
+                    ->map(fn ($value) => (int) $value)
+                    ->all();
 
                 foreach ($contests as $contest) {
+                    if (in_array($contest->id, $destroyedContests, true) && in_array($contest->id, $blankContests, true)) {
+                        $validator->errors()->add("blank_contests.{$contest->id}", "Choose only one status for {$contest->name}: blank or destroyed.");
+                        continue;
+                    }
+
+                    if (in_array($contest->id, $blankContests, true)) {
+                        continue;
+                    }
+
                     if (in_array($contest->id, $destroyedContests, true)) {
                         continue;
                     }

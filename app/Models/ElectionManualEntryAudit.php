@@ -14,6 +14,7 @@ class ElectionManualEntryAudit extends Model
         'election_id',
         'user_id',
         'payload',
+        'is_blank_ballot',
         'entered_at',
         'ip_address',
         'user_agent',
@@ -23,6 +24,7 @@ class ElectionManualEntryAudit extends Model
     {
         return [
             'payload' => 'array',
+            'is_blank_ballot' => 'boolean',
             'entered_at' => 'datetime',
         ];
     }

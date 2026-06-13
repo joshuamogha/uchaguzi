@@ -19,7 +19,8 @@ class ResultService
         $destroyedContests = (int) (ElectionContestManualSummary::query()
             ->where('election_id', $election->id)
             ->sum('destroyed_entries') ?? 0);
-        $hasManualSummary = $hasManualTallies || $destroyedContests > 0;
+        $blankContests = app(ManualResultService::class)->blankContests($election);
+        $hasManualSummary = $hasManualTallies || $destroyedContests > 0 || $blankContests > 0;
         $manualBallots = $hasManualSummary
             ? app(ManualResultService::class)->enteredBallots($election)
             : 0;
@@ -30,6 +31,7 @@ class ResultService
             'turnout_percentage' => $registered > 0 ? round(($voted / $registered) * 100, 2) : 0,
             'result_source' => $hasManualSummary ? 'manual' : 'digital',
             'manual_ballots_entered' => $manualBallots,
+            'blank_manual_entries' => $blankContests,
             'destroyed_manual_entries' => $destroyedContests,
         ];
     }
@@ -42,7 +44,10 @@ class ResultService
         $destroyedContests = ElectionContestManualSummary::query()
             ->where('election_id', $election->id)
             ->pluck('destroyed_entries', 'election_contest_id');
-        $hasManualTallies = $hasCandidateManualTallies || $destroyedContests->sum() > 0;
+        $blankContests = ElectionContestManualSummary::query()
+            ->where('election_id', $election->id)
+            ->pluck('blank_entries', 'election_contest_id');
+        $hasManualTallies = $hasCandidateManualTallies || $destroyedContests->sum() > 0 || $blankContests->sum() > 0;
 
         $contests = $election->contests()
             ->with([
@@ -62,7 +67,7 @@ class ResultService
             ])
             ->get();
 
-        return $contests->map(function ($contest) use ($hasManualTallies, $destroyedContests) {
+        return $contests->map(function ($contest) use ($hasManualTallies, $destroyedContests, $blankContests) {
             $previousVotes = null;
             $currentRank = 0;
 
@@ -130,6 +135,7 @@ class ResultService
 
             return [
                 'contest' => $contest,
+                'blank_entries' => (int) ($blankContests[$contest->id] ?? 0),
                 'destroyed_entries' => (int) ($destroyedContests[$contest->id] ?? 0),
                 'total_votes' => $totalVotes,
                 'top_candidates' => $topCandidates,

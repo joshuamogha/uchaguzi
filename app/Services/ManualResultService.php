@@ -40,6 +40,7 @@ class ManualResultService
         Election $election,
         array $selections,
         array $destroyedContestIds = [],
+        array $blankContestIds = [],
         ?User $user = null,
         ?Request $request = null,
     ): void
@@ -52,10 +53,36 @@ class ManualResultService
             ->where('is_active', true)
             ->get();
         $destroyedContestIds = array_values(array_unique(array_map('intval', $destroyedContestIds)));
+        $blankContestIds = array_values(array_unique(array_map('intval', $blankContestIds)));
         $auditEntries = [];
 
-        DB::transaction(function () use ($election, $selections, $contests, $destroyedContestIds, $user, $request, &$auditEntries) {
+        DB::transaction(function () use ($election, $selections, $contests, $destroyedContestIds, $blankContestIds, $user, $request, &$auditEntries) {
             foreach ($contests as $contest) {
+                if (in_array($contest->id, $blankContestIds, true)) {
+                    $summary = ElectionContestManualSummary::firstOrCreate(
+                        [
+                            'election_id' => $election->id,
+                            'election_contest_id' => $contest->id,
+                        ],
+                        [
+                            'destroyed_entries' => 0,
+                            'blank_entries' => 0,
+                        ],
+                    );
+
+                    $summary->increment('blank_entries');
+
+                    $auditEntries[] = [
+                        'contest_id' => $contest->id,
+                        'contest_name' => $contest->name,
+                        'community_name' => $contest->community?->name,
+                        'status' => 'blank',
+                        'candidate_ids' => [],
+                        'candidate_names' => [],
+                    ];
+
+                    continue;
+                }
                 if (in_array($contest->id, $destroyedContestIds, true)) {
                     $summary = ElectionContestManualSummary::firstOrCreate(
                         [
@@ -64,6 +91,7 @@ class ManualResultService
                         ],
                         [
                             'destroyed_entries' => 0,
+                            'blank_entries' => 0,
                         ],
                     );
 
@@ -116,6 +144,7 @@ class ManualResultService
                 'election_id' => $election->id,
                 'user_id' => $user?->id,
                 'payload' => $auditEntries,
+                'is_blank_ballot' => false,
                 'entered_at' => now(),
                 'ip_address' => $request?->ip(),
                 'user_agent' => $request?->userAgent(),
@@ -143,7 +172,8 @@ class ManualResultService
         return CandidateManualTally::query()
             ->where('election_id', $election->id)
             ->exists()
-            || $this->destroyedContests($election) > 0;
+            || $this->destroyedContests($election) > 0
+            || $this->blankContests($election) > 0;
     }
 
     public function enteredBallots(Election $election): int
@@ -158,6 +188,13 @@ class ManualResultService
         return (int) (ElectionContestManualSummary::query()
             ->where('election_id', $election->id)
             ->sum('destroyed_entries') ?? 0);
+    }
+
+    public function blankContests(Election $election): int
+    {
+        return (int) (ElectionContestManualSummary::query()
+            ->where('election_id', $election->id)
+            ->sum('blank_entries') ?? 0);
     }
 
     public function recentManualEntries(Election $election, int $limit = 10)

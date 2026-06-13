@@ -50,6 +50,7 @@ test('manual result entry form is available to authenticated users', function ()
     $response->assertSeeText('Mavurunza');
     $response->assertSeeText('Emmanuel Ndanshau');
     $response->assertSeeText('Submit This Paper Ballot');
+    $response->assertSeeText('Mark this contest as blank');
     $response->assertSeeText('Mark this contest as destroyed');
 });
 
@@ -182,6 +183,8 @@ test('destroyed contest entry increments destroyed count without affecting candi
     $manualEntryResponse->assertOk();
     $manualEntryResponse->assertSeeText('Paper ballots entered');
     $manualEntryResponse->assertSeeText('1');
+    $manualEntryResponse->assertSeeText('Blank contest entries');
+    $manualEntryResponse->assertSeeText('0');
     $manualEntryResponse->assertSeeText('Destroyed contest entries');
     $manualEntryResponse->assertSeeText('1');
     $manualEntryResponse->assertSeeText('Destroyed Entry Admin');
@@ -199,12 +202,84 @@ test('destroyed contest entry increments destroyed count without affecting candi
     $response->assertOk();
     $response->assertSeeText('Source: Manual tally entry');
     $response->assertSeeText('Paper ballots entered: 1');
+    $response->assertSeeText('Blank entries: 0');
     $response->assertSeeText('Destroyed entries: 1');
     $response->assertSeeText('Candidate One');
     $response->assertSeeText('0');
 });
 
-test('paper ballot can mix valid selections and destroyed contests', function () {
+test('blank contest entry is recorded separately without affecting candidate totals', function () {
+    $user = User::factory()->create([
+        'name' => 'Blank Contest Admin',
+        'is_admin' => true,
+    ]);
+    $group = ChurchGroup::create(['name' => 'Western Diocese', 'is_active' => true]);
+    $community = Community::create(['name' => 'Mavurunza', 'is_active' => true]);
+    $election = Election::create([
+        'church_group_id' => $group->id,
+        'title' => 'Manual Elders Election',
+        'start_at' => now(),
+        'end_at' => now()->addHour(),
+        'status' => ElectionStatus::Draft,
+    ]);
+    $contest = ElectionContest::create([
+        'election_id' => $election->id,
+        'community_id' => $community->id,
+        'name' => 'Mavurunza Elders',
+        'contest_type' => ContestType::Community,
+        'required_selections' => 1,
+        'min_selections' => 1,
+        'max_selections' => 1,
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    Candidate::create([
+        'election_id' => $election->id,
+        'election_contest_id' => $contest->id,
+        'name' => 'Candidate One',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->post(route('admin.elections.results.manual-entry.ballots.store', $election), [
+            'blank_contests' => [
+                $contest->id => '1',
+            ],
+        ])
+        ->assertRedirect(route('admin.elections.results.manual-entry', $election));
+
+    $manualEntryResponse = $this
+        ->actingAs($user)
+        ->get(route('admin.elections.results.manual-entry', $election));
+
+    $manualEntryResponse->assertOk();
+    $manualEntryResponse->assertSeeText('Paper ballots entered');
+    $manualEntryResponse->assertSeeText('1');
+    $manualEntryResponse->assertSeeText('Blank contest entries');
+    $manualEntryResponse->assertSeeText('1');
+    $manualEntryResponse->assertSeeText('Blank Contest Admin');
+    $manualEntryResponse->assertSeeText('Blank entry');
+
+    $this->assertDatabaseHas('election_manual_entry_audits', [
+        'election_id' => $election->id,
+        'user_id' => $user->id,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->get(route('admin.elections.results.index', $election));
+
+    $response->assertOk();
+    $response->assertSeeText('Paper ballots entered: 1');
+    $response->assertSeeText('Blank entries: 1');
+    $response->assertSeeText('Destroyed entries: 0');
+    $response->assertSeeText('Candidate One');
+    $response->assertSeeText('0');
+});
+
+test('paper ballot can mix valid selections and blank contests', function () {
     $user = User::factory()->create([
         'is_admin' => true,
     ]);
@@ -228,7 +303,7 @@ test('paper ballot can mix valid selections and destroyed contests', function ()
         'sort_order' => 1,
         'is_active' => true,
     ]);
-    $destroyedContest = ElectionContest::create([
+    $blankContest = ElectionContest::create([
         'election_id' => $election->id,
         'community_id' => $community->id,
         'name' => 'Parish Delegates',
@@ -248,8 +323,8 @@ test('paper ballot can mix valid selections and destroyed contests', function ()
     ]);
     Candidate::create([
         'election_id' => $election->id,
-        'election_contest_id' => $destroyedContest->id,
-        'name' => 'Destroyed Contest Candidate',
+        'election_contest_id' => $blankContest->id,
+        'name' => 'Blank Contest Candidate',
         'sort_order' => 1,
         'is_active' => true,
     ]);
@@ -260,8 +335,8 @@ test('paper ballot can mix valid selections and destroyed contests', function ()
             'selections' => [
                 $validContest->id => [$validCandidate->id],
             ],
-            'destroyed_contests' => [
-                $destroyedContest->id => '1',
+            'blank_contests' => [
+                $blankContest->id => '1',
             ],
         ])
         ->assertRedirect(route('admin.elections.results.manual-entry', $election));
@@ -272,7 +347,8 @@ test('paper ballot can mix valid selections and destroyed contests', function ()
 
     $response->assertOk();
     $response->assertSeeText('Paper ballots entered: 1');
-    $response->assertSeeText('Destroyed entries: 1');
+    $response->assertSeeText('Blank entries: 1');
+    $response->assertSeeText('Destroyed entries: 0');
     $response->assertSeeText('Ward Elders');
     $response->assertSeeText('Parish Delegates');
 });
@@ -328,6 +404,7 @@ test('closed elections expose manual ballot entry as read only and reject new ba
         ->get(route('admin.elections.results.manual-entry', $election));
 
     $followUp->assertSeeText('Paper ballots entered');
+    $followUp->assertSeeText('Blank contest entries');
     $followUp->assertSeeText('Destroyed contest entries');
     $followUp->assertSeeText('0');
 });

@@ -89,6 +89,10 @@
             margin-top: .85rem;
             padding-top: .85rem;
         }
+        .manual-sheet-flags {
+            display: grid;
+            gap: .55rem;
+        }
         .manual-sheet-destroyed-label {
             display: flex;
             align-items: center;
@@ -96,12 +100,32 @@
             font-weight: 600;
             cursor: pointer;
         }
+        .manual-sheet-destroyed-label input[type="checkbox"] {
+            width: 30px;
+            height: 24px;
+            margin: 0;
+            flex: 0 0 30px;
+            accent-color: #14532d;
+        }
+        .manual-sheet-card.is-blank {
+            border-color: #5c4b9b;
+            background: #f7f5ff;
+        }
+        .manual-sheet-card.is-blank .manual-sheet-option {
+            opacity: .45;
+        }
+        .manual-sheet-card.is-blank .manual-sheet-destroyed-label input[type="checkbox"] {
+            accent-color: #5c4b9b;
+        }
         .manual-sheet-card.is-destroyed {
             border-color: #b02a37;
             background: #fff6f6;
         }
         .manual-sheet-card.is-destroyed .manual-sheet-option {
             opacity: .45;
+        }
+        .manual-sheet-card.is-destroyed .manual-sheet-destroyed-label input[type="checkbox"] {
+            accent-color: #b02a37;
         }
         .manual-audit-list {
             display: grid;
@@ -155,7 +179,7 @@
         </div>
     @else
         <div class="alert alert-info surface-card border-0 mb-4">
-            Tick the boxes the same way they were marked on the paper ballot. If one contest on that paper ballot was destroyed or spoiled, mark that contest as destroyed so it is counted without changing any candidate totals.
+            Tick the boxes the same way they were marked on the paper ballot. If a voter left one specific contest unticked, mark that contest as blank. If one contest on that paper ballot was destroyed or spoiled, mark that contest as destroyed so it is counted without changing any candidate totals.
         </div>
     @endif
 
@@ -170,15 +194,17 @@
                             $contestField = "selections.{$contest->id}";
                             $selectedIds = array_map('intval', (array) old("selections.{$contest->id}", []));
                             $isDestroyed = old("destroyed_contests.{$contest->id}");
+                            $isBlank = old("blank_contests.{$contest->id}");
                             $destroyedCount = (int) ($contest->manualSummary?->destroyed_entries ?? 0);
+                            $blankCount = (int) ($contest->manualSummary?->blank_entries ?? 0);
                         @endphp
-                        <section class="card manual-sheet-card contest-section {{ $isDestroyed ? 'is-destroyed' : '' }}" data-required="{{ $contest->required_selections }}" data-max="{{ $contest->max_selections }}">
+                        <section class="card manual-sheet-card contest-section {{ $isDestroyed ? 'is-destroyed' : '' }} {{ $isBlank ? 'is-blank' : '' }}" data-required="{{ $contest->required_selections }}" data-max="{{ $contest->max_selections }}">
                             <div class="card-body">
                                 <div class="manual-sheet-title">{{ $contest->community?->name ?: $contest->name }}</div>
                                 <div class="manual-sheet-meta">
                                     {{ $contest->name }} | Chagua 
                                     {{ $contest->required_selections === 1 ? 'mjumbe' : 'wajumbe' }} {{ $contest->required_selections }}
-                                    {{-- | Destroyed entries: {{ $destroyedCount }} --}}
+                                    {{-- | Blank: {{ $blankCount }} | Destroyed: {{ $destroyedCount }} --}}
                                 </div>
 
                                 @foreach ($contest->candidates as $candidate)
@@ -196,7 +222,7 @@
                                                 name="selections[{{ $contest->id }}][]"
                                                 value="{{ $candidate->id }}"
                                                 {{ $selected ? 'checked' : '' }}
-                                                {{ $isDestroyed ? 'disabled' : '' }}
+                                                {{ $isDestroyed || $isBlank ? 'disabled' : '' }}
                                                 {{ $isReadOnly ? 'disabled' : '' }}
                                             >
                                         </label>
@@ -204,22 +230,38 @@
                                 @endforeach
 
                                 <div class="manual-sheet-destroyed">
-                                    <label class="manual-sheet-destroyed-label">
-                                        <input
-                                            class="manual-destroyed-toggle"
-                                            type="checkbox"
-                                            name="destroyed_contests[{{ $contest->id }}]"
-                                            value="1"
-                                            {{ $isDestroyed ? 'checked' : '' }}
-                                            {{ $isReadOnly ? 'disabled' : '' }}
-                                        >
-                                        <span>Mark this contest as destroyed</span>
-                                    </label>
-                                    <div class="small text-muted mt-2">When marked destroyed, this contest is logged separately and the candidate ticks above are ignored.</div>
+                                    <div class="manual-sheet-flags">
+                                        <label class="manual-sheet-destroyed-label">
+                                            <input
+                                                class="manual-blank-toggle"
+                                                type="checkbox"
+                                                name="blank_contests[{{ $contest->id }}]"
+                                                value="1"
+                                                {{ $isBlank ? 'checked' : '' }}
+                                                {{ $isReadOnly ? 'disabled' : '' }}
+                                            >
+                                            <span>Mark this contest as blank</span>
+                                        </label>
+                                        <label class="manual-sheet-destroyed-label">
+                                            <input
+                                                class="manual-destroyed-toggle"
+                                                type="checkbox"
+                                                name="destroyed_contests[{{ $contest->id }}]"
+                                                value="1"
+                                                {{ $isDestroyed ? 'checked' : '' }}
+                                                {{ $isReadOnly ? 'disabled' : '' }}
+                                            >
+                                            <span>Mark this contest as destroyed</span>
+                                        </label>
+                                    </div>
+                                    <div class="small text-muted mt-2">Blank means the voter left this contest unticked. Destroyed means the contest was spoiled. Both options ignore the candidate ticks above.</div>
                                 </div>
 
                                 @error($contestField)
                                     <div class="text-danger small mt-3">{{ $message }}</div>
+                                @enderror
+                                @error("blank_contests.{$contest->id}")
+                                    <div class="text-danger small mt-2">{{ $message }}</div>
                                 @enderror
                             </div>
                         </section>
@@ -238,6 +280,10 @@
                             <strong>{{ $enteredBallots }}</strong>
                         </div>
                         <div class="list-group-item d-flex justify-content-between">
+                            <span>Blank contest entries</span>
+                            <strong>{{ $blankContests }}</strong>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between">
                             <span>Destroyed contest entries</span>
                             <strong>{{ $destroyedContests }}</strong>
                         </div>
@@ -252,7 +298,7 @@
                     </div>
 
                     <div class="small text-muted mb-3">
-                        Each contest must either match the required ticks or be marked destroyed. Each submit records one physical paper ballot. Destroyed contests are recorded separately and do not add votes to any candidate.
+                        Each contest must either match the required ticks, be marked blank, or be marked destroyed. Each submit records one physical paper ballot.
                     </div>
 
                     <div class="d-grid gap-2">
@@ -290,7 +336,9 @@
                                             @foreach ($entry->payload ?? [] as $line)
                                                 <li>
                                                     {{ $line['community_name'] ?: $line['contest_name'] }}:
-                                                    @if (($line['status'] ?? null) === 'destroyed')
+                                                    @if (($line['status'] ?? null) === 'blank')
+                                                        Blank entry
+                                                    @elseif (($line['status'] ?? null) === 'destroyed')
                                                         Destroyed entry
                                                     @else
                                                         {{ collect($line['candidate_names'] ?? [])->join(', ') }}
@@ -321,21 +369,28 @@
             });
         };
 
+        const isBlankSection = (section) => {
+            const toggle = section.querySelector('.manual-blank-toggle');
+            return Boolean(toggle?.checked);
+        };
+
         const isDestroyedSection = (section) => {
             const toggle = section.querySelector('.manual-destroyed-toggle');
             return Boolean(toggle?.checked);
         };
 
-        const syncDestroyedState = (section) => {
+        const syncContestState = (section) => {
+            const blank = isBlankSection(section);
             const destroyed = isDestroyedSection(section);
+            section.classList.toggle('is-blank', blank);
             section.classList.toggle('is-destroyed', destroyed);
 
             section.querySelectorAll('.manual-ballot-choice').forEach((input) => {
-                if (destroyed) {
+                if (blank || destroyed) {
                     input.checked = false;
                 }
 
-                input.disabled = destroyed || {{ $isReadOnly ? 'true' : 'false' }};
+                input.disabled = blank || destroyed || {{ $isReadOnly ? 'true' : 'false' }};
             });
 
             updateManualSelectionState(section);
@@ -345,6 +400,11 @@
             let completed = 0;
 
             manualSections.forEach((section) => {
+                if (isBlankSection(section)) {
+                    completed += 1;
+                    return;
+                }
+
                 if (isDestroyedSection(section)) {
                     completed += 1;
                     return;
@@ -363,6 +423,7 @@
         manualSections.forEach((section) => {
             const max = Number(section.dataset.max);
             const inputs = Array.from(section.querySelectorAll('.manual-ballot-choice'));
+            const blankToggle = section.querySelector('.manual-blank-toggle');
             const destroyedToggle = section.querySelector('.manual-destroyed-toggle');
 
             inputs.forEach((input) => {
@@ -379,12 +440,25 @@
                 });
             });
 
-            destroyedToggle?.addEventListener('change', () => {
-                syncDestroyedState(section);
+            blankToggle?.addEventListener('change', () => {
+                if (blankToggle.checked && destroyedToggle) {
+                    destroyedToggle.checked = false;
+                }
+
+                syncContestState(section);
                 updateManualProgress();
             });
 
-            syncDestroyedState(section);
+            destroyedToggle?.addEventListener('change', () => {
+                if (destroyedToggle.checked && blankToggle) {
+                    blankToggle.checked = false;
+                }
+
+                syncContestState(section);
+                updateManualProgress();
+            });
+
+            syncContestState(section);
         });
 
         document.getElementById('clearTickForm').addEventListener('click', () => {
@@ -392,11 +466,11 @@
                 input.checked = false;
             });
 
-            document.querySelectorAll('.manual-destroyed-toggle').forEach((input) => {
+            document.querySelectorAll('.manual-destroyed-toggle, .manual-blank-toggle').forEach((input) => {
                 input.checked = false;
             });
 
-            manualSections.forEach((section) => syncDestroyedState(section));
+            manualSections.forEach((section) => syncContestState(section));
             updateManualProgress();
         });
 

@@ -92,6 +92,11 @@
             gap: 1.5rem;
             align-items: start;
             min-height: calc(100vh - var(--app-nav-height));
+            transition: grid-template-columns .2s ease, gap .2s ease;
+        }
+        .admin-shell.sidebar-collapsed {
+            grid-template-columns: 0 minmax(0, 1fr);
+            gap: 0;
         }
         .admin-sidebar {
             position: sticky;
@@ -102,6 +107,12 @@
             box-shadow: none;
             overflow-y: auto;
             overflow-x: hidden;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+        .admin-shell.sidebar-collapsed .admin-sidebar {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-18px);
         }
         .admin-sidebar .sidebar-header {
             background: #000000;
@@ -151,13 +162,37 @@
         .admin-content {
             padding: 1.5rem 1.5rem 1.5rem 0;
         }
+        .admin-content-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+        .sidebar-toggle-btn {
+            border: 1px solid rgba(19, 34, 56, .12);
+            background: #ffffff;
+            color: var(--brand-text);
+            border-radius: 999px;
+            padding: .55rem .95rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .sidebar-toggle-btn:hover {
+            background: #f5f8fb;
+        }
         @media (max-width: 991.98px) {
             .admin-shell {
                 grid-template-columns: 1fr;
             }
+            .admin-shell.sidebar-collapsed {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
             .admin-sidebar {
                 position: static;
                 height: auto;
+            }
+            .admin-shell.sidebar-collapsed .admin-sidebar {
+                display: none;
             }
             .admin-content {
                 padding: 0;
@@ -205,7 +240,7 @@
 <main class="{{ $isAdminArea ? 'py-0' : 'py-4 py-lg-5' }}">
     <div class="{{ $isAdminArea ? 'container-fluid px-0' : 'container' }}">
         @if ($isAdminArea)
-            <div class="admin-shell">
+            <div class="admin-shell" id="adminShell">
                 <aside class="admin-sidebar">
                     <div class="sidebar-header p-4">
                         <div class="small text-uppercase fw-semibold opacity-75 mb-2">Administration</div>
@@ -274,6 +309,12 @@
                 </aside>
 
                 <div class="admin-content">
+                    <div class="admin-content-toolbar">
+                        <button class="sidebar-toggle-btn" type="button" id="sidebarToggle" aria-expanded="true">
+                            Hide Sidebar
+                        </button>
+                    </div>
+
                     @if (session('success'))
                         <div class="alert alert-success">{{ session('success') }}</div>
                     @endif
@@ -314,6 +355,34 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+@if ($isAdminArea)
+    <script>
+        (() => {
+            const adminShell = document.getElementById('adminShell');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+
+            if (!adminShell || !sidebarToggle) {
+                return;
+            }
+
+            const storageKey = 'uchaguzi-admin-sidebar-collapsed';
+            const applySidebarState = (collapsed) => {
+                adminShell.classList.toggle('sidebar-collapsed', collapsed);
+                sidebarToggle.textContent = collapsed ? 'Show Sidebar' : 'Hide Sidebar';
+                sidebarToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            };
+
+            const storedState = window.localStorage.getItem(storageKey) === 'true';
+            applySidebarState(storedState);
+
+            sidebarToggle.addEventListener('click', () => {
+                const collapsed = !adminShell.classList.contains('sidebar-collapsed');
+                applySidebarState(collapsed);
+                window.localStorage.setItem(storageKey, collapsed ? 'true' : 'false');
+            });
+        })();
+    </script>
+@endif
 @stack('scripts')
 </body>
 </html>

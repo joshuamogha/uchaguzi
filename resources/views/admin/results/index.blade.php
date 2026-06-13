@@ -7,7 +7,7 @@
             <p class="page-subtle mb-0">
                 {{ $election->title }}
                 @if ($summary['result_source'] === 'manual')
-                    | Source: Manual tally entry | Paper ballots entered: {{ $summary['manual_ballots_entered'] }} | Destroyed entries: {{ $summary['destroyed_manual_entries'] }}
+                    | Source: Manual tally entry | Paper ballots entered: {{ $summary['manual_ballots_entered'] }} | Blank entries: {{ $summary['blank_manual_entries'] }} | Destroyed entries: {{ $summary['destroyed_manual_entries'] }}
                 @else
                     | Registered: {{ $summary['registered_voters'] }} | Cast: {{ $summary['votes_cast'] }} | Turnout: {{ $summary['turnout_percentage'] }}%
                 @endif
@@ -27,7 +27,7 @@
 
     @if ($summary['result_source'] === 'manual')
         <div class="alert alert-warning mb-4">
-            This report is currently using manually entered vote totals from the paper candidate sheets. Destroyed contest entries are counted separately and do not affect candidate totals.
+            This report is currently using manually entered vote totals from the paper candidate sheets. Blank contest entries and destroyed contest entries are counted separately and do not affect candidate totals.
         </div>
     @endif
 
@@ -60,7 +60,7 @@
         <div class="card surface-card mb-4">
             <div class="card-header px-4 pt-4">
                 <h2 class="h4 mb-1">{{ $contestResult['contest']->name }}</h2>
-                <p class="text-muted mb-0">Winner slots: {{ $contestResult['contest']->required_selections }} | Total votes: {{ $contestResult['total_votes'] }} | Destroyed entries: {{ $contestResult['destroyed_entries'] }} | Highest votes: {{ $contestResult['top_candidates']->isNotEmpty() ? $contestResult['top_candidates']->join(', ') : 'None' }}</p>
+                <p class="text-muted mb-0">Winner slots: {{ $contestResult['contest']->required_selections }} | Total votes: {{ $contestResult['total_votes'] }} | Blank entries: {{ $contestResult['blank_entries'] }} | Destroyed entries: {{ $contestResult['destroyed_entries'] }} | Highest votes: {{ $contestResult['top_candidates']->isNotEmpty() ? $contestResult['top_candidates']->join(', ') : 'None' }}</p>
                 @if ($contestResult['requires_runoff'])
                     <div class="alert alert-warning mt-3 mb-0">
                         Tie detected at the winner cutoff.
