@@ -18,6 +18,7 @@
                             <th style="width: 80px;">#</th>
                             <th>Name</th>
                             <th>Email</th>
+                            <th>Phone</th>
                             <th>Role</th>
                             <th>Status</th>
                             <th class="text-end"></th>
@@ -29,6 +30,7 @@
                             <td>{{ ($users->firstItem() ?? 1) + $loop->index }}</td>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->email }}</td>
+                            <td>{{ $user->phone_number ?: 'N/A' }}</td>
                             <td>
                                 <span class="badge text-bg-{{ $user->is_admin ? 'dark' : 'secondary' }}">
                                     {{ $user->is_admin ? 'Admin' : 'Ballot Entry' }}
@@ -44,7 +46,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="text-muted">No users available.</td></tr>
+                        <tr><td colspan="7" class="text-muted">No users available.</td></tr>
                     @endforelse
                     </tbody>
                 </table>

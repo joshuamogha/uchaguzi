@@ -48,6 +48,7 @@ class ElectionResultController extends Controller
             'contests' => $election->contests()
                 ->with([
                     'community',
+                    'manualSummary',
                     'candidates' => fn ($query) => $query
                         ->with([
                             'member',
@@ -58,6 +59,8 @@ class ElectionResultController extends Controller
                 ->where('is_active', true)
                 ->get(),
             'enteredBallots' => $this->manualResultService->enteredBallots($election),
+            'destroyedContests' => $this->manualResultService->destroyedContests($election),
+            'recentManualEntries' => $this->manualResultService->recentManualEntries($election),
             'isReadOnly' => $election->status === ElectionStatus::Closed,
         ]);
     }
@@ -74,11 +77,17 @@ class ElectionResultController extends Controller
                 ]);
         }
 
-        $this->manualResultService->recordBallot($election, $request->validated('selections'));
+        $this->manualResultService->recordBallot(
+            $election,
+            $request->validated('selections', []),
+            array_keys(array_filter($request->input('destroyed_contests', []))),
+            $request->user(),
+            $request,
+        );
 
         return redirect()
             ->route('admin.elections.results.manual-entry', $election)
-            ->with('success', 'Paper ballot recorded successfully.');
+            ->with('success', 'Paper ballot entry recorded successfully.');
     }
 
     public function updateManualEntry(ManualResultEntryRequest $request, Election $election): RedirectResponse
@@ -98,7 +107,7 @@ class ElectionResultController extends Controller
 
         $rows = $this->resultService->exportRows($election);
         $handle = fopen('php://temp', 'r+');
-        fputcsv($handle, ['Contest', 'Candidate', 'Votes', 'Ranking', 'Winner']);
+        fputcsv($handle, ['Contest', 'Candidate', 'Votes', 'Ranking', 'Winner', 'Total Contest Votes', 'Spoiled Votes']);
 
         foreach ($rows as $row) {
             fputcsv($handle, array_values($row));
@@ -111,6 +120,19 @@ class ElectionResultController extends Controller
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="election-results-'.$election->id.'.csv"',
+        ]);
+    }
+
+    public function exportPdf(Election $election): View
+    {
+        $this->authorize('exportResults', $election);
+
+        $contestResults = $this->resultService->contestResults($election);
+
+        return view('admin.results.export-pdf', [
+            'election' => $election->load('churchGroup'),
+            'summary' => $this->resultService->summary($election),
+            'contestResults' => $contestResults,
         ]);
     }
 

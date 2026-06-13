@@ -66,7 +66,7 @@
                         <th>Title</th>
                         <th>Status</th>
                         <th>Window</th>
-                        <th>Ballots Entered</th>
+                        <th>Paper Ballots</th>
                         <th></th>
                     </tr>
                     </thead>
@@ -77,7 +77,12 @@
                             <td>{{ $election->title }}</td>
                             <td><span class="badge text-bg-secondary">{{ strtoupper($election->status->value) }}</span></td>
                             <td>{{ $election->start_at->format('d M Y H:i') }} - {{ $election->end_at->format('d M Y H:i') }}</td>
-                            <td>{{ $election->entered_ballots }}</td>
+                            <td>
+                                {{ $election->entered_ballots }}
+                                @if ($election->destroyed_contests > 0)
+                                    <div class="small text-danger">Destroyed: {{ $election->destroyed_contests }}</div>
+                                @endif
+                            </td>
                             <td>
                                 @if ($isAdmin)
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.elections.contests.index', $election) }}">Manage</a>

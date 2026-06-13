@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CandidateManualTally;
 use App\Models\Election;
+use App\Models\ElectionContestManualSummary;
 use Illuminate\Support\Collection;
 
 class ResultService
@@ -15,20 +16,33 @@ class ResultService
         $hasManualTallies = CandidateManualTally::query()
             ->where('election_id', $election->id)
             ->exists();
+        $destroyedContests = (int) (ElectionContestManualSummary::query()
+            ->where('election_id', $election->id)
+            ->sum('destroyed_entries') ?? 0);
+        $hasManualSummary = $hasManualTallies || $destroyedContests > 0;
+        $manualBallots = $hasManualSummary
+            ? app(ManualResultService::class)->enteredBallots($election)
+            : 0;
 
         return [
             'registered_voters' => $registered,
             'votes_cast' => $voted,
             'turnout_percentage' => $registered > 0 ? round(($voted / $registered) * 100, 2) : 0,
-            'result_source' => $hasManualTallies ? 'manual' : 'digital',
+            'result_source' => $hasManualSummary ? 'manual' : 'digital',
+            'manual_ballots_entered' => $manualBallots,
+            'destroyed_manual_entries' => $destroyedContests,
         ];
     }
 
     public function contestResults(Election $election): array
     {
-        $hasManualTallies = CandidateManualTally::query()
+        $hasCandidateManualTallies = CandidateManualTally::query()
             ->where('election_id', $election->id)
             ->exists();
+        $destroyedContests = ElectionContestManualSummary::query()
+            ->where('election_id', $election->id)
+            ->pluck('destroyed_entries', 'election_contest_id');
+        $hasManualTallies = $hasCandidateManualTallies || $destroyedContests->sum() > 0;
 
         $contests = $election->contests()
             ->with([
@@ -48,7 +62,7 @@ class ResultService
             ])
             ->get();
 
-        return $contests->map(function ($contest) use ($hasManualTallies) {
+        return $contests->map(function ($contest) use ($hasManualTallies, $destroyedContests) {
             $previousVotes = null;
             $currentRank = 0;
 
@@ -108,9 +122,17 @@ class ResultService
             $topVotes = (int) ($positiveResults->first()['votes'] ?? 0);
             $secondVotes = (int) ($positiveResults->skip(1)->first()['votes'] ?? 0);
             $topMargin = max($topVotes - $secondVotes, 0);
+            $totalVotes = (int) $results->sum('votes');
+            $topCandidates = $results
+                ->where('votes', $topVotes)
+                ->pluck('candidate.name')
+                ->values();
 
             return [
                 'contest' => $contest,
+                'destroyed_entries' => (int) ($destroyedContests[$contest->id] ?? 0),
+                'total_votes' => $totalVotes,
+                'top_candidates' => $topCandidates,
                 'requires_runoff' => $requiresRunoff,
                 'runoff_slots' => $runoffSlots,
                 'runoff_candidates' => $runoffCandidates,
@@ -179,6 +201,8 @@ class ResultService
                     'votes' => $row['votes'],
                     'ranking' => $row['ranking'],
                     'winner' => $row['is_winner'] ? 'Yes' : 'No',
+                    'total_votes' => $contestResult['total_votes'],
+                    'spoiled_votes' => $contestResult['destroyed_entries'],
                 ];
             }
         }

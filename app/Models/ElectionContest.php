@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ElectionContest extends Model
 {
@@ -50,5 +51,10 @@ class ElectionContest extends Model
     public function selections(): HasMany
     {
         return $this->hasMany(BallotSelection::class);
+    }
+
+    public function manualSummary(): HasOne
+    {
+        return $this->hasOne(ElectionContestManualSummary::class, 'election_contest_id');
     }
 }

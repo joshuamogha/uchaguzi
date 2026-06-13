@@ -4,6 +4,10 @@ namespace App\Services;
 
 use App\Models\CandidateManualTally;
 use App\Models\Election;
+use App\Models\ElectionManualEntryAudit;
+use App\Models\ElectionContestManualSummary;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ManualResultService
@@ -32,13 +36,56 @@ class ManualResultService
         });
     }
 
-    public function recordBallot(Election $election, array $selections): void
+    public function recordBallot(
+        Election $election,
+        array $selections,
+        array $destroyedContestIds = [],
+        ?User $user = null,
+        ?Request $request = null,
+    ): void
     {
-        $contests = $election->contests()->with(['candidates' => fn ($query) => $query->where('is_active', true)])->where('is_active', true)->get();
+        $contests = $election->contests()
+            ->with([
+                'community',
+                'candidates' => fn ($query) => $query->where('is_active', true),
+            ])
+            ->where('is_active', true)
+            ->get();
+        $destroyedContestIds = array_values(array_unique(array_map('intval', $destroyedContestIds)));
+        $auditEntries = [];
 
-        DB::transaction(function () use ($election, $selections, $contests) {
+        DB::transaction(function () use ($election, $selections, $contests, $destroyedContestIds, $user, $request, &$auditEntries) {
             foreach ($contests as $contest) {
+                if (in_array($contest->id, $destroyedContestIds, true)) {
+                    $summary = ElectionContestManualSummary::firstOrCreate(
+                        [
+                            'election_id' => $election->id,
+                            'election_contest_id' => $contest->id,
+                        ],
+                        [
+                            'destroyed_entries' => 0,
+                        ],
+                    );
+
+                    $summary->increment('destroyed_entries');
+
+                    $auditEntries[] = [
+                        'contest_id' => $contest->id,
+                        'contest_name' => $contest->name,
+                        'community_name' => $contest->community?->name,
+                        'status' => 'destroyed',
+                        'candidate_ids' => [],
+                        'candidate_names' => [],
+                    ];
+
+                    continue;
+                }
+
                 $selectedIds = array_values(array_unique(array_map('intval', (array) ($selections[$contest->id] ?? $selections[(string) $contest->id] ?? []))));
+                $selectedCandidates = $contest->candidates
+                    ->whereIn('id', $selectedIds)
+                    ->sortBy('name')
+                    ->values();
 
                 foreach ($selectedIds as $candidateId) {
                     $tally = CandidateManualTally::firstOrCreate(
@@ -54,7 +101,25 @@ class ManualResultService
 
                     $tally->increment('votes');
                 }
+
+                $auditEntries[] = [
+                    'contest_id' => $contest->id,
+                    'contest_name' => $contest->name,
+                    'community_name' => $contest->community?->name,
+                    'status' => 'valid',
+                    'candidate_ids' => $selectedCandidates->pluck('id')->all(),
+                    'candidate_names' => $selectedCandidates->pluck('name')->all(),
+                ];
             }
+
+            ElectionManualEntryAudit::create([
+                'election_id' => $election->id,
+                'user_id' => $user?->id,
+                'payload' => $auditEntries,
+                'entered_at' => now(),
+                'ip_address' => $request?->ip(),
+                'user_agent' => $request?->userAgent(),
+            ]);
         });
     }
 
@@ -63,36 +128,45 @@ class ManualResultService
         CandidateManualTally::query()
             ->where('election_id', $election->id)
             ->delete();
+
+        ElectionContestManualSummary::query()
+            ->where('election_id', $election->id)
+            ->delete();
+
+        ElectionManualEntryAudit::query()
+            ->where('election_id', $election->id)
+            ->delete();
     }
 
     public function hasManualTallies(Election $election): bool
     {
         return CandidateManualTally::query()
             ->where('election_id', $election->id)
-            ->exists();
+            ->exists()
+            || $this->destroyedContests($election) > 0;
     }
 
     public function enteredBallots(Election $election): int
     {
-        $contest = $election->contests()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->first();
-
-        if (! $contest) {
-            return 0;
-        }
-
-        $totalVotes = CandidateManualTally::query()
+        return ElectionManualEntryAudit::query()
             ->where('election_id', $election->id)
-            ->where('election_contest_id', $contest->id)
-            ->sum('votes');
+            ->count();
+    }
 
-        if ((int) $contest->required_selections < 1) {
-            return 0;
-        }
+    public function destroyedContests(Election $election): int
+    {
+        return (int) (ElectionContestManualSummary::query()
+            ->where('election_id', $election->id)
+            ->sum('destroyed_entries') ?? 0);
+    }
 
-        return (int) floor($totalVotes / (int) $contest->required_selections);
+    public function recentManualEntries(Election $election, int $limit = 10)
+    {
+        return ElectionManualEntryAudit::query()
+            ->with('user')
+            ->where('election_id', $election->id)
+            ->orderByDesc('entered_at')
+            ->limit($limit)
+            ->get();
     }
 }

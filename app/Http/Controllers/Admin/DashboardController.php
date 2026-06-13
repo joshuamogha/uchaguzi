@@ -29,6 +29,7 @@ class DashboardController extends Controller
         $turnoutPercentage = $totalVoters > 0 ? round(($votesCast / $totalVoters) * 100, 2) : 0;
         $recentElections = Election::latest()->take(5)->get()->map(function (Election $election) {
             $election->entered_ballots = $this->manualResultService->enteredBallots($election);
+            $election->destroyed_contests = $this->manualResultService->destroyedContests($election);
 
             return $election;
         });

@@ -16,7 +16,8 @@ class ManualBallotEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'selections' => ['required', 'array'],
+            'selections' => ['nullable', 'array'],
+            'destroyed_contests' => ['nullable', 'array'],
         ];
     }
 
@@ -37,8 +38,17 @@ class ManualBallotEntryRequest extends FormRequest
                     ->get();
 
                 $submittedSelections = $this->input('selections', []);
+                $destroyedContests = collect($this->input('destroyed_contests', []))
+                    ->filter(fn ($value) => filled($value))
+                    ->keys()
+                    ->map(fn ($value) => (int) $value)
+                    ->all();
 
                 foreach ($contests as $contest) {
+                    if (in_array($contest->id, $destroyedContests, true)) {
+                        continue;
+                    }
+
                     $selectedIds = $submittedSelections[$contest->id] ?? $submittedSelections[(string) $contest->id] ?? [];
                     $selectedIds = array_values(array_unique(array_map('intval', (array) $selectedIds)));
 

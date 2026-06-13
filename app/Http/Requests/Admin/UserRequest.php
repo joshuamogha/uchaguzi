@@ -27,7 +27,8 @@ class UserRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user?->id),
             ],
-            'password' => [$user?->exists ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
+            'phone_number' => ['required', 'string', 'max:50'],
+            'password' => [$user?->exists ? 'nullable' : 'prohibited', 'string', 'min:8', 'confirmed'],
             'is_admin' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
         ];

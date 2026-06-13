@@ -11,7 +11,7 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table align-middle">
-                    <thead><tr><th style="width: 80px;">#</th><th>Title</th><th>Group</th><th>Window</th><th>Status</th><th>Ballots Entered</th>@if($isAdmin)<th>Public Results</th>@endif<th></th></tr></thead>
+                    <thead><tr><th style="width: 80px;">#</th><th>Title</th><th>Group</th><th>Window</th><th>Status</th><th>Paper Ballots</th>@if($isAdmin)<th>Public Results</th>@endif<th></th></tr></thead>
                     <tbody>
                     @forelse ($elections as $election)
                         <tr>
@@ -20,7 +20,12 @@
                             <td>{{ $election->churchGroup?->name ?: 'General' }}</td>
                             <td>{{ $election->start_at->format('d M Y H:i') }} - {{ $election->end_at->format('d M Y H:i') }}</td>
                             <td><span class="badge text-bg-secondary">{{ strtoupper($election->status->value) }}</span></td>
-                            <td>{{ $election->entered_ballots }}</td>
+                            <td>
+                                {{ $election->entered_ballots }}
+                                @if ($election->destroyed_contests > 0)
+                                    <div class="small text-danger">Destroyed: {{ $election->destroyed_contests }}</div>
+                                @endif
+                            </td>
                             @if ($isAdmin)
                                 <td><span class="badge text-bg-{{ $election->public_results_enabled ? 'success' : 'secondary' }}">{{ $election->public_results_enabled ? 'Enabled' : 'Disabled' }}</span></td>
                             @endif

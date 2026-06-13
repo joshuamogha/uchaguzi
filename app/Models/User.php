@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'is_active'])]
+#[Fillable(['name', 'email', 'phone_number', 'password', 'is_admin', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -46,5 +46,10 @@ class User extends Authenticatable
     public function electionLogs(): HasMany
     {
         return $this->hasMany(ElectionLog::class);
+    }
+
+    public function manualEntryAudits(): HasMany
+    {
+        return $this->hasMany(ElectionManualEntryAudit::class);
     }
 }

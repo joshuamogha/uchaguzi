@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserRequest;
+use App\Jobs\SendSMSJob;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -31,9 +34,14 @@ class UserController extends Controller
     public function store(UserRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $data['password'] = Hash::make($data['password']);
+        $plainPassword = Str::password(8, letters: true, numbers: true, symbols: false);
+        $data['password'] = Hash::make($plainPassword);
 
-        User::create($data);
+        $user = User::create($data);
+        $url=url('login');
+        $message="Habari {$user->name}, akaunti yako ya uchaguzi imefunguliwa. Barua pepe: {$user->email}. Nenosiri lako ni: {$plainPassword} na kiungo cha kuingia: {$url}";
+
+        SendSMSJob::dispatch($user, $message)->delay(Carbon::now()->addSeconds(3));
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully.');
     }

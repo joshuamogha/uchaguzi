@@ -63,7 +63,8 @@ test('non admin users can view dashboard elections and manual ballot entry', fun
     $this->actingAs($user)
         ->get(route('admin.elections.results.manual-entry', $election))
         ->assertOk()
-        ->assertSeeText('Paper ballots entered');
+        ->assertSeeText('Paper ballots entered')
+        ->assertSeeText('Destroyed contest entries');
 
     $this->actingAs($user)
         ->get(route('admin.elections.candidates.export-sheet', $election))

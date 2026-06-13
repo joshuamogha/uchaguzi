@@ -2,8 +2,12 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
+use App\Jobs\SendSMSJob;
 
 test('admin can create and update users', function () {
+    Queue::fake();
+
     $admin = User::factory()->create([
         'is_admin' => true,
         'is_active' => true,
@@ -13,8 +17,7 @@ test('admin can create and update users', function () {
         ->post(route('admin.users.store'), [
             'name' => 'Ballot Clerk',
             'email' => 'clerk@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'phone_number' => '255712345678',
             'is_admin' => 0,
             'is_active' => 1,
         ])
@@ -24,12 +27,20 @@ test('admin can create and update users', function () {
 
     expect($user->is_admin)->toBeFalse();
     expect($user->is_active)->toBeTrue();
-    expect(Hash::check('password123', $user->password))->toBeTrue();
+    expect($user->phone_number)->toBe('255712345678');
+    expect($user->password)->not->toBeEmpty();
+
+    Queue::assertPushed(SendSMSJob::class, function (SendSMSJob $job) use ($user) {
+        return $job->user->is($user)
+            && str_contains($job->message, 'Nenosiri lako ni:')
+            && str_contains($job->message, 'clerk@example.com');
+    });
 
     $this->actingAs($admin)
         ->put(route('admin.users.update', $user), [
             'name' => 'Ballot Clerk Updated',
             'email' => 'clerk@example.com',
+            'phone_number' => '255798765432',
             'password' => '',
             'password_confirmation' => '',
             'is_admin' => 0,
@@ -40,6 +51,7 @@ test('admin can create and update users', function () {
     $user->refresh();
 
     expect($user->name)->toBe('Ballot Clerk Updated');
+    expect($user->phone_number)->toBe('255798765432');
     expect($user->is_active)->toBeFalse();
 });
 
@@ -70,6 +82,7 @@ test('admin cannot deactivate their own account', function () {
         ->put(route('admin.users.update', $admin), [
             'name' => $admin->name,
             'email' => $admin->email,
+            'phone_number' => $admin->phone_number,
             'password' => '',
             'password_confirmation' => '',
             'is_admin' => 1,

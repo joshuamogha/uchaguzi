@@ -23,6 +23,7 @@ class ElectionController extends Controller
         $elections = Election::query()->with('churchGroup')->latest()->paginate(15);
         $elections->getCollection()->transform(function (Election $election) {
             $election->entered_ballots = $this->manualResultService->enteredBallots($election);
+            $election->destroyed_contests = $this->manualResultService->destroyedContests($election);
 
             return $election;
         });

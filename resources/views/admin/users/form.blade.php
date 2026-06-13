@@ -18,19 +18,29 @@
                     <input class="form-control" type="email" name="email" value="{{ old('email', $managedUser->email) }}" required>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">{{ $managedUser->exists ? 'New Password' : 'Password' }}</label>
-                        <input class="form-control" type="password" name="password" {{ $managedUser->exists ? '' : 'required' }}>
-                        @if ($managedUser->exists)
-                            <div class="form-text">Leave blank to keep the current password.</div>
-                        @endif
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Confirm Password</label>
-                        <input class="form-control" type="password" name="password_confirmation" {{ $managedUser->exists ? '' : 'required' }}>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input class="form-control" type="text" name="phone_number" value="{{ old('phone_number', $managedUser->phone_number) }}" required>
+                    <div class="form-text">{{ $managedUser->exists ? 'Used for SMS notifications.' : 'The password will be sent to this phone number by SMS.' }}</div>
                 </div>
+
+                @if ($managedUser->exists)
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">New Password</label>
+                            <input class="form-control" type="password" name="password">
+                            <div class="form-text">Leave blank to keep the current password.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password</label>
+                            <input class="form-control" type="password" name="password_confirmation">
+                        </div>
+                    </div>
+                @else
+                    <div class="alert alert-info mt-3 mb-0">
+                        The system will generate a password automatically and send it to this phone number by SMS.
+                    </div>
+                @endif
 
                 <div class="row g-3 mt-1">
                     <div class="col-md-6">

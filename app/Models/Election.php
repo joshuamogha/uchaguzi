@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Election extends Model
@@ -55,6 +56,11 @@ class Election extends Model
         return $this->hasMany(CandidateManualTally::class);
     }
 
+    public function manualSummary(): HasOne
+    {
+        return $this->hasOne(ElectionManualSummary::class);
+    }
+
     public function voters(): HasMany
     {
         return $this->hasMany(Voter::class);
@@ -68,6 +74,11 @@ class Election extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(ElectionLog::class);
+    }
+
+    public function manualEntryAudits(): HasMany
+    {
+        return $this->hasMany(ElectionManualEntryAudit::class);
     }
 
     public function isOpenForVoting(?CarbonInterface $now = null): bool

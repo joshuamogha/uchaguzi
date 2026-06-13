@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'sms'=>[
+           'api_id'=>'API63559130897',
+        'api_password'=>'GLsUNhgmQF',
+        'sender_id'=>'KKKTTEMBONI'
+    ]
 
 ];

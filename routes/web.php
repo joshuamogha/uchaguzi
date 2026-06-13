@@ -73,6 +73,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->scopeBindings()->gro
         Route::get('/elections/{election}/results', [ElectionResultController::class, 'index'])->name('elections.results.index');
         Route::put('/elections/{election}/results/manual-entry', [ElectionResultController::class, 'updateManualEntry'])->name('elections.results.manual-entry.update');
         Route::get('/elections/{election}/results/export', [ElectionResultController::class, 'export'])->name('elections.results.export');
+        Route::get('/elections/{election}/results/export-pdf', [ElectionResultController::class, 'exportPdf'])->name('elections.results.export-pdf');
         Route::post('/elections/{election}/results/{contest}/runoff', [ElectionResultController::class, 'createRunoff'])->name('elections.results.runoff');
     });
 });
