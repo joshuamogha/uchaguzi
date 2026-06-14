@@ -14,6 +14,8 @@
             font-family: Arial, Helvetica, sans-serif;
             color: #111;
             background: #fff;
+            font-size: 12px;
+            
         }
 
         .page {
@@ -163,11 +165,10 @@
             <button class="print-button" type="button" onclick="window.print()">Chapisha / Hifadhi PDF</button>
         </div>
 
-        <div class="sheet-title">
-            <h1>DAYOSISI YA MASHARIKI NA PWANI</h1>
-            <h2>JIMBO LA MAGHARIBI</h2>
-            <h2>USHARIKA WA TEMBONI</h2>
-            <h3>ORODHA YA WALIOCHAGULIWA KUWA WAZEE WA KANISA TAREHE {{ now()->format('d/m/Y') }}</h3>
+        <div class="sheet-title ">
+            <h4 style="margin: 0px">KKKT DAYOSISI YA MASHARIKI NA PWANI</h4>
+            <h4 style="margin: 0px">JIMBO LA MAGHARIBI,USHARIKA WA TEMBONI</h4>
+            <h4 style="margin: 0px">ORODHA YA WALIOCHAGULIWA KUWA WAZEE WA KANISA TAREHE {{ now()->format('d/m/Y') }}</h4>
         </div>
 
         @php
