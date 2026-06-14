@@ -165,8 +165,8 @@
             <h1>DAYOSISI YA MASHARIKI NA PWANI</h1>
             <h2>JIMBO LA MAGHARIBI</h2>
             <h2>USHARIKA WA TEMBONI</h2>
-            <h3>RIPOTI YA MATOKEO YA {{ strtoupper($election->title) }}</h3>
-            <p>
+            <h3>ORODHA YA WALIOCHAGULIWA KUWA WAZEE WA KANISA TAREHE {{ now()->format('d/m/Y') }}</h3>
+            {{-- <p>
                 Chanzo: {{ $summary['result_source'] === 'manual' ? 'Uingizaji wa matokeo kwa mkono' : 'Upigaji kura wa kidijitali' }}
                 @if ($summary['result_source'] === 'manual')
                     | Karatasi za kura zilizoingizwa: {{ $summary['manual_ballots_entered'] }}
@@ -176,73 +176,39 @@
                     | Kura zilizopigwa: {{ $summary['votes_cast'] }}
                     | Ushiriki: {{ $summary['turnout_percentage'] }}%
                 @endif
-            </p>
+            </p> --}}
         </div>
 
-        <div class="summary-grid">
-            <div class="summary-box">
-                <div class="summary-label">Wapiga Kura Waliosajiliwa</div>
-                <div class="summary-value">{{ $summary['registered_voters'] }}</div>
-            </div>
-            <div class="summary-box">
-                <div class="summary-label">Karatasi za Kura</div>
-                <div class="summary-value">{{ $summary['result_source'] === 'manual' ? $summary['manual_ballots_entered'] : $summary['votes_cast'] }}</div>
-            </div>
-            <div class="summary-box">
-                <div class="summary-label">Kura Zilizoharibika</div>
-                <div class="summary-value">{{ $summary['result_source'] === 'manual' ? $summary['destroyed_manual_entries'] : 0 }}</div>
-            </div>
-            <div class="summary-box">
-                <div class="summary-label">Nafasi Tupu</div>
-                <div class="summary-value">{{ $summary['result_source'] === 'manual' ? $summary['blank_manual_entries'] : 0 }}</div>
-            </div>
-        </div>
+        @php
+            $winnerRows = collect($contestResults)
+                ->flatMap(fn (array $contestResult) => collect($contestResult['results'])
+                    ->filter(fn (array $row) => $row['is_winner'] || $row['is_tied_winner'])
+                    ->values())
+                ->values();
+        @endphp
 
-        @foreach ($contestResults as $contestResult)
-            <section class="contest-card">
-                <h4 class="contest-name">{{ strtoupper($contestResult['contest']->name) }}</h4>
-                <p class="contest-meta">
-                    Nafasi: {{ $loop->iteration }} kati ya {{ count($contestResults) }}
-                    | Jumla ya kura: {{ $contestResult['total_votes'] }}
-                    | Nafasi tupu: {{ $contestResult['blank_entries'] }}
-                    | Kura zilizoharibika: {{ $contestResult['destroyed_entries'] }}
-                    | Kura za juu zaidi: {{ $contestResult['top_votes'] }}
-                    | Wenye kura nyingi:
-                    {{ $contestResult['top_candidates']->isNotEmpty() ? strtoupper($contestResult['top_candidates']->join(', ')) : 'HAKUNA' }}
-                </p>
-
-                <table>
-                    <thead>
+        <section class="contest-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 60px;">Na.</th>
+                        <th>Majina</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($winnerRows as $row)
                         <tr>
-                            <th style="width: 60px;">Na.</th>
-                            <th style="width: 70px;">Nafasi</th>
-                            <th>Mgombea</th>
-                            <th style="width: 100px;">Kura</th>
-                            <th style="width: 120px;">Hali</th>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ strtoupper($row['candidate']->name) }}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($contestResult['results'] as $row)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td>{{ $row['ranking'] }}</td>
-                                <td>{{ strtoupper($row['candidate']->name) }}</td>
-                                <td class="text-right">{{ $row['votes'] }}</td>
-                                <td>
-                                    @if ($row['is_tied_winner'])
-                                        Mshindi wa Sare
-                                    @elseif ($row['is_winner'])
-                                        Mshindi
-                                    @else
-                                        Mshiriki
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </section>
-        @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="2">Hakuna washindi waliopatikana.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </section>
     </div>
 </body>
 </html>

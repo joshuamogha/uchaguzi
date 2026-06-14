@@ -154,13 +154,14 @@ test('results pdf export shows contests in order with totals spoiled votes and t
         ->get(route('admin.elections.results.export-pdf', $election));
 
     $response->assertOk();
-    $response->assertSeeText('RIPOTI YA MATOKEO YA RESULTS ACCESS ELECTION');
-    $response->assertSeeText('FIRST CONTEST');
-    $response->assertSeeText('SECOND CONTEST');
-    $response->assertSeeText('Nafasi: 1 kati ya 2');
-    $response->assertSeeText('Nafasi: 2 kati ya 2');
-    $response->assertSeeText('Jumla ya kura: 2');
-    $response->assertSeeText('Kura zilizoharibika: 1');
+    $response->assertSeeText('DAYOSISI YA MASHARIKI NA PWANI');
+    $response->assertSeeText('JIMBO LA MAGHARIBI');
+    $response->assertSeeText('USHARIKA WA TEMBONI');
+    $response->assertSeeText('ORODHA YA WALIOCHAGULIWA KUWA WAZEE WA KANISA TAREHE '.now()->format('d/m/Y'));
+    $response->assertSeeText('Majina');
     $response->assertSeeText('ALPHA CANDIDATE');
     $response->assertSeeText('GAMMA CANDIDATE');
+    $response->assertDontSeeText('FIRST CONTEST');
+    $response->assertDontSeeText('SECOND CONTEST');
+    $response->assertDontSeeText('Jumla ya kura: 2');
 });
