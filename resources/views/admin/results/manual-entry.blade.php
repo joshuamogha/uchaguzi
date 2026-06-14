@@ -267,6 +267,10 @@
                         </section>
                     @endforeach
                 </div>
+     <div class="d-flex justify-content-center mt-4">
+              <button class="btn btn-primary btn-lg" type="submit" form="manualBallotForm" {{ $isReadOnly ? 'disabled' : '' }}>Submit This Paper Ballot</button>
+     </div>
+             
             </form>
         </div>
 
@@ -302,7 +306,7 @@
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary" type="submit" form="manualBallotForm" {{ $isReadOnly ? 'disabled' : '' }}>Submit This Paper Ballot</button>
+                     
                         <button class="btn btn-outline-secondary" type="button" id="clearTickForm" {{ $isReadOnly ? 'disabled' : '' }}>Clear Current Ticks</button>
                         @can('viewResults', $election)
                             <a class="btn btn-outline-dark" href="{{ route('admin.elections.results.index', $election) }}">View Running Results</a>
