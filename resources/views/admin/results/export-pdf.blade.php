@@ -192,7 +192,7 @@
                 <thead>
                     <tr>
                         <th style="width: 60px;">Na.</th>
-                        <th>Majina</th>
+                        <th>Jina</th>
                     </tr>
                 </thead>
                 <tbody>
