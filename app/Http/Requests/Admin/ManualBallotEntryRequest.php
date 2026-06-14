@@ -67,12 +67,12 @@ class ManualBallotEntryRequest extends FormRequest
                     $selectedIds = $submittedSelections[$contest->id] ?? $submittedSelections[(string) $contest->id] ?? [];
                     $selectedIds = array_values(array_unique(array_map('intval', (array) $selectedIds)));
 
-                    if (count($selectedIds) !== (int) $contest->required_selections) {
-                        $validator->errors()->add("selections.{$contest->id}", "Tick exactly {$contest->required_selections} candidate(s) for {$contest->name}.");
+                    if (count($selectedIds) < 1) {
+                        $validator->errors()->add("selections.{$contest->id}", "Tick at least one candidate for {$contest->name}, or mark it as blank or destroyed.");
                         continue;
                     }
 
-                    if (count($selectedIds) < (int) $contest->min_selections || count($selectedIds) > (int) $contest->max_selections) {
+                    if (count($selectedIds) > (int) $contest->max_selections) {
                         $validator->errors()->add("selections.{$contest->id}", "The number of ticks for {$contest->name} is outside the allowed range.");
                         continue;
                     }

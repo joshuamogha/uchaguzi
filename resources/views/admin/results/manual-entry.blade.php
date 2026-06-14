@@ -179,7 +179,7 @@
         </div>
     @else
         <div class="alert alert-info surface-card border-0 mb-4">
-            Tick the boxes the same way they were marked on the paper ballot. If a voter left one specific contest unticked, mark that contest as blank. If one contest on that paper ballot was destroyed or spoiled, mark that contest as destroyed so it is counted without changing any candidate totals.
+            Tick the boxes the same way they were marked on the paper ballot. A contest may be submitted with fewer ticks than the target count as long as at least one valid candidate was marked. If a voter left one specific contest unticked, mark that contest as blank. If one contest on that paper ballot was destroyed or spoiled, mark that contest as destroyed so it is counted without changing any candidate totals.
         </div>
     @endif
 
@@ -298,7 +298,7 @@
                     </div>
 
                     <div class="small text-muted mb-3">
-                        Each contest must either match the required ticks, be marked blank, or be marked destroyed. Each submit records one physical paper ballot.
+                        Each contest must either have at least one valid tick, be marked blank, or be marked destroyed. Each submit records one physical paper ballot.
                     </div>
 
                     <div class="d-grid gap-2">
@@ -410,9 +410,8 @@
                     return;
                 }
 
-                const required = Number(section.dataset.required);
                 const checked = section.querySelectorAll('.manual-ballot-choice:checked').length;
-                if (checked === required) {
+                if (checked >= 1) {
                     completed += 1;
                 }
             });

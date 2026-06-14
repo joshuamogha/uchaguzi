@@ -134,6 +134,61 @@ test('manual ballot entry updates the results report and ranking', function () {
     $response->assertSeeText('Winner');
 });
 
+test('manual ballot entry allows fewer ticks than the contest required count', function () {
+    $user = User::factory()->create([
+        'is_admin' => true,
+    ]);
+    $group = ChurchGroup::create(['name' => 'Western Diocese', 'is_active' => true]);
+    $community = Community::create(['name' => 'Mavurunza', 'is_active' => true]);
+    $election = Election::create([
+        'church_group_id' => $group->id,
+        'title' => 'Manual Delegates Election',
+        'start_at' => now(),
+        'end_at' => now()->addHour(),
+        'status' => ElectionStatus::Draft,
+    ]);
+    $contest = ElectionContest::create([
+        'election_id' => $election->id,
+        'community_id' => $community->id,
+        'name' => 'Mavurunza Delegates',
+        'contest_type' => ContestType::Community,
+        'required_selections' => 2,
+        'min_selections' => 2,
+        'max_selections' => 2,
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    $candidateOne = Candidate::create([
+        'election_id' => $election->id,
+        'election_contest_id' => $contest->id,
+        'name' => 'Candidate One',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    Candidate::create([
+        'election_id' => $election->id,
+        'election_contest_id' => $contest->id,
+        'name' => 'Candidate Two',
+        'sort_order' => 2,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('admin.elections.results.manual-entry.ballots.store', $election), [
+            'selections' => [
+                $contest->id => [$candidateOne->id],
+            ],
+        ])
+        ->assertRedirect(route('admin.elections.results.manual-entry', $election));
+
+    $response = $this->actingAs($user)
+        ->get(route('admin.elections.results.index', $election));
+
+    $response->assertOk();
+    $response->assertSeeText('Candidate One');
+    $response->assertSeeText('1');
+});
+
 test('destroyed contest entry increments destroyed count without affecting candidate totals', function () {
     $user = User::factory()->create([
         'name' => 'Destroyed Entry Admin',
