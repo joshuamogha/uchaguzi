@@ -41,7 +41,7 @@
 
         .sheet-title {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 10px;
         }
 
         .sheet-title h1,
@@ -72,28 +72,16 @@
         }
 
         .contest-card {
-            border: 1.5px solid #333;
-            padding: 12px 14px;
-            margin-bottom: 14px;
-            page-break-inside: avoid;
-        }
-
-        .contest-name {
-            font-size: 16px;
-            font-weight: 800;
-            text-transform: uppercase;
-            margin: 0 0 6px;
-        }
-
-        .contest-meta {
-            margin: 0 0 10px;
-            font-size: 13px;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            page-break-inside: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
+            margin-top: 0;
         }
 
         th,
@@ -152,6 +140,20 @@
                 max-width: none;
                 padding: 0;
             }
+
+            .sheet-title {
+                page-break-after: avoid;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            tr,
+            td,
+            th {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
@@ -166,17 +168,6 @@
             <h2>JIMBO LA MAGHARIBI</h2>
             <h2>USHARIKA WA TEMBONI</h2>
             <h3>ORODHA YA WALIOCHAGULIWA KUWA WAZEE WA KANISA TAREHE {{ now()->format('d/m/Y') }}</h3>
-            {{-- <p>
-                Chanzo: {{ $summary['result_source'] === 'manual' ? 'Uingizaji wa matokeo kwa mkono' : 'Upigaji kura wa kidijitali' }}
-                @if ($summary['result_source'] === 'manual')
-                    | Karatasi za kura zilizoingizwa: {{ $summary['manual_ballots_entered'] }}
-                    | Nafasi tupu: {{ $summary['blank_manual_entries'] }}
-                    | Kura zilizoharibika: {{ $summary['destroyed_manual_entries'] }}
-                @else
-                    | Kura zilizopigwa: {{ $summary['votes_cast'] }}
-                    | Ushiriki: {{ $summary['turnout_percentage'] }}%
-                @endif
-            </p> --}}
         </div>
 
         @php

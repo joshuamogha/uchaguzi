@@ -158,7 +158,7 @@ test('results pdf export shows contests in order with totals spoiled votes and t
     $response->assertSeeText('JIMBO LA MAGHARIBI');
     $response->assertSeeText('USHARIKA WA TEMBONI');
     $response->assertSeeText('ORODHA YA WALIOCHAGULIWA KUWA WAZEE WA KANISA TAREHE '.now()->format('d/m/Y'));
-    $response->assertSeeText('Majina');
+    $response->assertSeeText('Jina');
     $response->assertSeeText('ALPHA CANDIDATE');
     $response->assertSeeText('GAMMA CANDIDATE');
     $response->assertDontSeeText('FIRST CONTEST');
